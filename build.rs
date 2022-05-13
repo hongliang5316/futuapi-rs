@@ -1,0 +1,22 @@
+fn main() {
+    protobuf_codegen::Codegen::new()
+        .pure()
+        .include("proto")
+        .inputs(&[
+            "proto/InitConnect.proto",
+            "proto/Common.proto",
+            "proto/Qot_Common.proto",
+            "proto/Qot_GetIpoList.proto",
+            "proto/Qot_GetSecuritySnapshot.proto",
+            "proto/Qot_GetUserSecurityGroup.proto",
+            "proto/Qot_ModifyUserSecurity.proto",
+            "proto/Qot_GetPlateSecurity.proto",
+            "proto/Qot_StockFilter.proto",
+            "proto/Qot_Sub.proto",
+            "proto/Qot_GetBasicQot.proto",
+            "proto/Qot_UpdateBasicQot.proto",
+            "proto/GetGlobalState.proto",
+        ])
+        .cargo_out_dir("rust_protobuf_protos")
+        .run_from_script();
+}
