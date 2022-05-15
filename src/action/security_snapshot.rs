@@ -1,6 +1,6 @@
 use super::common::{PreAfterMarketData, Security, SecurityVec};
-use crate::frame::Frame;
 use crate::Common::RetType;
+use crate::Frame;
 use crate::Qot_GetSecuritySnapshot::{self, Request, Response, C2S};
 use protobuf::MessageField;
 

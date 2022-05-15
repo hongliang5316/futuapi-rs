@@ -1,6 +1,6 @@
 use super::super::common::{BasicQot, Security, SecurityVec};
-use crate::frame::Frame;
 use crate::Common::RetType;
+use crate::Frame;
 use crate::Qot_GetBasicQot::{Request, Response, C2S};
 use protobuf::MessageField;
 

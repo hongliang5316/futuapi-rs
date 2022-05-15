@@ -1,6 +1,6 @@
 use crate::action::common::ProgramStatus;
-use crate::frame::Frame;
 use crate::Common::RetType;
+use crate::Frame;
 use crate::GetGlobalState::{Request, Response, C2S};
 use crate::Qot_Common::QotMarketState;
 use protobuf::{Enum, MessageField};

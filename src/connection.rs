@@ -1,6 +1,5 @@
 use crate::frame::{Error, Frame};
-use bytes::Buf;
-use bytes::BytesMut;
+use bytes::{Buf, BytesMut};
 use protobuf::MessageFull;
 use std::io::{self, Cursor};
 use tokio::io::{AsyncReadExt, AsyncWriteExt, BufWriter};

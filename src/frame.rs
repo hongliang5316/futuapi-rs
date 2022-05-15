@@ -1,5 +1,4 @@
-use atomic_counter::AtomicCounter;
-use atomic_counter::ConsistentCounter;
+use atomic_counter::{AtomicCounter, ConsistentCounter};
 use bytes::Buf;
 use crypto::digest::Digest;
 use crypto::sha1::Sha1;

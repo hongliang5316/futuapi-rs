@@ -1,24 +1,23 @@
-use crate::action::basic_qot::{
-    self,
-    get::{GetBasicQotRequest, GetBasicQotResponse},
-};
-use crate::action::global_state::{self, GetGlobalStateRequest, GetGlobalStateResponse};
-use crate::action::init_connect::{self, InitConnectRequest, InitConnectResponse};
-use crate::action::ipo::{self, GetIpoListRequest, GetIpoListResponse};
-use crate::action::plate_security::{self, GetPlateSecurityRequest, GetPlateSecurityResponse};
-use crate::action::security_snapshot::{
-    self, GetSecuritySnapshotRequest, GetSecuritySnapshotResponse,
-};
-use crate::action::stock_filter::{self, GetStockFilterRequest, GetStockFilterResponse};
-use crate::action::subscribe::{self, SubscribeRequest};
-use crate::action::user_security_group::{
-    self,
-    get::{GetUserSecurityGroupRequest, GetUserSecurityGroupResponse},
-    modify::ModifyUserSecurityGroupRequest,
+use crate::action::{
+    basic_qot::{
+        self,
+        get::{GetBasicQotRequest, GetBasicQotResponse},
+    },
+    global_state::{self, GetGlobalStateRequest, GetGlobalStateResponse},
+    init_connect::{self, InitConnectRequest, InitConnectResponse},
+    ipo::{self, GetIpoListRequest, GetIpoListResponse},
+    plate_security::{self, GetPlateSecurityRequest, GetPlateSecurityResponse},
+    security_snapshot::{self, GetSecuritySnapshotRequest, GetSecuritySnapshotResponse},
+    stock_filter::{self, GetStockFilterRequest, GetStockFilterResponse},
+    subscribe::{self, SubscribeRequest},
+    user_security_group::{
+        self,
+        get::{GetUserSecurityGroupRequest, GetUserSecurityGroupResponse},
+        modify::ModifyUserSecurityGroupRequest,
+    },
 };
 use crate::{Connection, Frame};
-use tokio::net::TcpStream;
-use tokio::net::ToSocketAddrs;
+use tokio::net::{TcpStream, ToSocketAddrs};
 
 pub struct QotClient {
     connection: Connection,
