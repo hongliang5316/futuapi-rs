@@ -19,11 +19,11 @@ impl Into<Request> for GetPlateSecurityRequest {
         let mut req = Request::new();
         let mut c2s = C2S::new();
         c2s.plate = MessageField::some(self.plate.into());
-        c2s.sortField = if self.sort_field.is_some() {
-            Some(self.sort_field.unwrap() as i32)
-        } else {
-            None
-        };
+
+        if let Some(sort_field) = self.sort_field {
+            c2s.sortField = Some(sort_field as i32);
+        }
+
         c2s.ascend = self.ascend;
         req.c2s = MessageField::some(c2s);
 
