@@ -7,6 +7,10 @@ use crate::action::{
     init_connect::{self, InitConnectRequest, InitConnectResponse},
     ipo::{self, GetIpoListRequest, GetIpoListResponse},
     plate_security::{self, GetPlateSecurityRequest, GetPlateSecurityResponse},
+    price_reminder::{
+        self,
+        set::{SetPriceReminderRequest, SetPriceReminderResponse},
+    },
     security_snapshot::{self, GetSecuritySnapshotRequest, GetSecuritySnapshotResponse},
     stock_filter::{self, GetStockFilterRequest, GetStockFilterResponse},
     subscribe::{self, SubscribeRequest},
@@ -153,5 +157,16 @@ impl QotClient {
         let frame: Frame<crate::Qot_GetBasicQot::Response> =
             self.connection.read_frame().await.unwrap().unwrap();
         basic_qot::get::check_response(frame.body)
+    }
+
+    pub async fn set_price_reminder(
+        &mut self,
+        set_price_reminder_req: SetPriceReminderRequest,
+    ) -> crate::Result<SetPriceReminderResponse> {
+        let frame = set_price_reminder_req.into_frame();
+        self.connection.write_frame(&frame).await.unwrap();
+        let frame: Frame<crate::Qot_SetPriceReminder::Response> =
+            self.connection.read_frame().await.unwrap().unwrap();
+        price_reminder::set::check_response(frame.body)
     }
 }

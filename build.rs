@@ -16,6 +16,8 @@ fn main() {
             "proto/Qot_GetBasicQot.proto",
             "proto/Qot_UpdateBasicQot.proto",
             "proto/GetGlobalState.proto",
+            "proto/Qot_GetPriceReminder.proto",
+            "proto/Qot_SetPriceReminder.proto",
         ])
         .cargo_out_dir("rust_protobuf_protos")
         .run_from_script();
