@@ -5,7 +5,7 @@ use crate::Qot_Common::QotMarket;
 use crate::Qot_GetIpoList::{Request, Response, C2S};
 use protobuf::MessageField;
 
-const PROTO_ID: u32 = 3217;
+pub const PROTO_ID: u32 = 3217;
 
 #[derive(Debug)]
 pub struct GetIpoListRequest(QotMarket);
@@ -71,7 +71,17 @@ impl From<Response> for GetIpoListResponse {
     }
 }
 
-pub fn check_response(resp: Response) -> crate::Result<GetIpoListResponse> {
+pub fn check_response(frame: Frame<Response>) -> crate::Result<GetIpoListResponse> {
+    let header = frame.header;
+    if header.proto_id != PROTO_ID {
+        return Err(format!(
+            "The PROTO_ID not equal, {} != {}",
+            header.proto_id, PROTO_ID
+        )
+        .into());
+    }
+
+    let resp = frame.body;
     if resp.retType() == RetType::RetType_Succeed as i32 {
         return Ok(resp.into());
     }

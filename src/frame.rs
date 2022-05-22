@@ -1,8 +1,10 @@
+use crate::action::basic_qot;
+use crate::Qot_UpdateBasicQot;
 use atomic_counter::{AtomicCounter, ConsistentCounter};
 use bytes::Buf;
 use crypto::digest::Digest;
 use crypto::sha1::Sha1;
-use protobuf::MessageFull;
+use protobuf::{self, MessageFull};
 use serde::{Deserialize, Serialize};
 use std::io::Cursor;
 
@@ -17,7 +19,7 @@ lazy_static! {
 #[derive(Serialize, Deserialize, Debug)]
 pub struct APIProtoHeader {
     header_flag: [u8; 2],
-    proto_id: u32,
+    pub proto_id: u32,
     proto_fmt_type: u8,
     proto_ver: u8,
     serial_no: u32,
@@ -53,6 +55,14 @@ fn sha1(s: &str) -> [u8; 20] {
     buf
 }
 
+fn sha1_bytes(msg: &[u8]) -> [u8; 20] {
+    let mut buf: [u8; 20] = Default::default();
+    let mut hasher = Sha1::new();
+    hasher.input(msg);
+    hasher.result(&mut buf);
+    buf
+}
+
 fn get_header(src: &mut Cursor<&[u8]>) -> Result<APIProtoHeader, Error> {
     let remaining = src.remaining();
     if remaining < PROTO_HEADER_LEN {
@@ -72,45 +82,62 @@ fn get_body<T: MessageFull>(src: &mut Cursor<&[u8]>, len: u32) -> Result<T, Erro
         return Err(Error::Incomplete);
     }
 
-    if remaining > len {
-        return Err(Error::ProtoError("The body len too long".into()));
-    }
-
-    // TODO: support both protobuf/json
-    let s = String::from_utf8(src.chunk().to_vec()).unwrap();
-
-    src.advance(len as usize);
-
-    Ok(protobuf_json_mapping::parse_from_str(&s).unwrap())
+    Ok(T::parse_from_bytes(src.copy_to_bytes(len as usize).as_ref()).unwrap())
 }
 
 impl<T: MessageFull> Frame<T> {
     pub fn new(body: T, proto_id: u32) -> Frame<T> {
         SERIAL_NO.inc();
 
-        let json = protobuf_json_mapping::print_to_string(&body).unwrap();
+        // let json = protobuf::text_format::print_to_string(&body);
+
+        let b = body.write_to_bytes().unwrap();
 
         Frame {
             header: APIProtoHeader {
                 header_flag: HEADER_FLAG,
                 proto_id,
-                proto_fmt_type: 1, // 0: protobuf 1: json
+                proto_fmt_type: 0, // 0: protobuf 1: json
                 proto_ver: 0,
                 serial_no: SERIAL_NO.get() as u32,
-                body_len: json.len() as u32,
-                body_sha1: sha1(&json),
+                body_len: b.len() as u32,
+                body_sha1: sha1_bytes(&b),
                 reserved: Default::default(),
             },
             body,
         }
     }
 
-    pub fn parse(src: &mut Cursor<&[u8]>) -> Result<Frame<T>, Error> {
+    pub async fn parse(
+        src: &mut Cursor<&[u8]>,
+        proto_id: u32,
+    ) -> Result<
+        (
+            Option<Frame<T>>,
+            Option<basic_qot::update::UpdateBasicQotResponse>,
+        ),
+        Error,
+    > {
         let header = get_header(src)?;
         let body_len = header.body_len;
-        Ok(Frame {
-            header,
-            body: get_body(src, body_len)?,
-        })
+
+        if header.proto_id == proto_id {
+            return Ok((
+                Some(Frame {
+                    header,
+                    body: get_body(src, body_len)?,
+                }),
+                None,
+            ));
+        }
+
+        if header.proto_id != 3005 {
+            panic!("{}", header.proto_id);
+        }
+
+        println!("3005");
+
+        let body = get_body::<Qot_UpdateBasicQot::Response>(src, body_len)?;
+        Ok((None, Some(body.into())))
     }
 }

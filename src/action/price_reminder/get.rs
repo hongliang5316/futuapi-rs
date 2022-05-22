@@ -5,7 +5,7 @@ use crate::Qot_Common::{PriceReminderFreq, PriceReminderType, QotMarket};
 use crate::Qot_GetPriceReminder::{self, Request, Response, C2S};
 use protobuf::{Enum, MessageField};
 
-const PROTO_ID: u32 = 3221;
+pub const PROTO_ID: u32 = 3221;
 
 pub struct GetPriceReminderRequest {
     security: Option<Security>,

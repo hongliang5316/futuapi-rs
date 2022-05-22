@@ -5,7 +5,7 @@ use crate::GetGlobalState::{Request, Response, C2S};
 use crate::Qot_Common::QotMarketState;
 use protobuf::{Enum, MessageField};
 
-const PROTO_ID: u32 = 1002;
+pub const PROTO_ID: u32 = 1002;
 
 pub struct GetGlobalStateRequest;
 
