@@ -9,6 +9,7 @@ use crate::action::{
     plate_security::{self, GetPlateSecurityRequest, GetPlateSecurityResponse},
     price_reminder::{
         self,
+        get::{GetPriceReminderRequest, GetPriceReminderResponse},
         set::{SetPriceReminderRequest, SetPriceReminderResponse},
     },
     security_snapshot::{self, GetSecuritySnapshotRequest, GetSecuritySnapshotResponse},
@@ -168,5 +169,16 @@ impl QotClient {
         let frame: Frame<crate::Qot_SetPriceReminder::Response> =
             self.connection.read_frame().await.unwrap().unwrap();
         price_reminder::set::check_response(frame.body)
+    }
+
+    pub async fn get_price_reminder(
+        &mut self,
+        get_price_reminder_req: GetPriceReminderRequest,
+    ) -> crate::Result<GetPriceReminderResponse> {
+        let frame = get_price_reminder_req.into_frame();
+        self.connection.write_frame(&frame).await.unwrap();
+        let frame: Frame<crate::Qot_GetPriceReminder::Response> =
+            self.connection.read_frame().await.unwrap().unwrap();
+        price_reminder::get::check_response(frame.body)
     }
 }

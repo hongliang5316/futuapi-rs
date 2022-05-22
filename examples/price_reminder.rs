@@ -1,4 +1,7 @@
-use futuapi_rs::action::price_reminder::set::SetPriceReminderRequest;
+use futuapi_rs::action::price_reminder::{
+    get::GetPriceReminderRequest, set::SetPriceReminderRequest,
+};
+use futuapi_rs::Qot_Common::{PriceReminderFreq, PriceReminderType};
 use futuapi_rs::Qot_SetPriceReminder::SetPriceReminderOp;
 use futuapi_rs::{client, Result};
 
@@ -8,16 +11,37 @@ pub async fn main() -> Result<()> {
     let set_price_reminder_resp = client
         .set_price_reminder(SetPriceReminderRequest::new(
             "US.CEI".try_into().unwrap(),
+            SetPriceReminderOp::SetPriceReminderOp_Add,
+            None,
+            Some(PriceReminderType::PriceReminderType_PriceUp),
+            Some(PriceReminderFreq::PriceReminderFreq_OnlyOnce),
+            Some(1.1),
+            Some("test".into()),
+        ))
+        .await?;
+
+    println!("{:?}", set_price_reminder_resp);
+
+    let get_price_reminder_resp = client
+        .get_price_reminder(GetPriceReminderRequest::new(
+            Some("US.CEI".try_into().unwrap()),
+            None,
+        ))
+        .await?;
+
+    println!("{:?}", get_price_reminder_resp);
+
+    client
+        .set_price_reminder(SetPriceReminderRequest::new(
+            "US.CEI".try_into().unwrap(),
             SetPriceReminderOp::SetPriceReminderOp_DelAll,
             None,
             None,
             None,
             None,
-            None,
+            Some("test".into()),
         ))
         .await?;
-
-    println!("{:?}", set_price_reminder_resp);
 
     Ok(())
 }
