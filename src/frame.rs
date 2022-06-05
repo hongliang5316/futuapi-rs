@@ -45,10 +45,10 @@ pub struct Frame<T: MessageFull> {
     pub body: T,
 }
 
-fn sha1(s: &str) -> [u8; 20] {
+fn sha1(msg: &[u8]) -> [u8; 20] {
     let mut buf: [u8; 20] = Default::default();
     let mut hasher = Sha1::new();
-    hasher.input_str(s);
+    hasher.input(msg);
     hasher.result(&mut buf);
     buf
 }
@@ -72,33 +72,24 @@ fn get_body<T: MessageFull>(src: &mut Cursor<&[u8]>, len: u32) -> Result<T, Erro
         return Err(Error::Incomplete);
     }
 
-    if remaining > len {
-        return Err(Error::ProtoError("The body len too long".into()));
-    }
-
-    // TODO: support both protobuf/json
-    let s = String::from_utf8(src.chunk().to_vec()).unwrap();
-
-    src.advance(len as usize);
-
-    Ok(protobuf_json_mapping::parse_from_str(&s).unwrap())
+    Ok(T::parse_from_bytes(src.copy_to_bytes(len as usize).as_ref()).unwrap())
 }
 
 impl<T: MessageFull> Frame<T> {
     pub fn new(body: T, proto_id: u32) -> Frame<T> {
         SERIAL_NO.inc();
 
-        let json = protobuf_json_mapping::print_to_string(&body).unwrap();
+        let b = body.write_to_bytes().unwrap();
 
         Frame {
             header: APIProtoHeader {
                 header_flag: HEADER_FLAG,
                 proto_id,
-                proto_fmt_type: 1, // 0: protobuf 1: json
+                proto_fmt_type: 0, // 0: protobuf 1: json
                 proto_ver: 0,
                 serial_no: SERIAL_NO.get() as u32,
-                body_len: json.len() as u32,
-                body_sha1: sha1(&json),
+                body_len: b.len() as u32,
+                body_sha1: sha1(&b),
                 reserved: Default::default(),
             },
             body,
@@ -107,6 +98,12 @@ impl<T: MessageFull> Frame<T> {
 
     pub fn parse(src: &mut Cursor<&[u8]>) -> Result<Frame<T>, Error> {
         let header = get_header(src)?;
+        if header.proto_fmt_type != 0 {
+            return Err(Error::Other(
+                "Unsupported protocol format type: json".into(),
+            ));
+        }
+
         let body_len = header.body_len;
         Ok(Frame {
             header,

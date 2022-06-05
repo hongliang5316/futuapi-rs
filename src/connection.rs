@@ -48,11 +48,7 @@ impl Connection {
     pub async fn write_frame<T: MessageFull>(&mut self, frame: &Frame<T>) -> io::Result<()> {
         self.stream.write_all(&frame.header.to_vec()).await?;
         self.stream
-            .write_all(
-                protobuf_json_mapping::print_to_string(&frame.body)
-                    .unwrap()
-                    .as_bytes(),
-            )
+            .write_all(frame.body.write_to_bytes().unwrap().as_ref())
             .await?;
         self.stream.flush().await
     }
