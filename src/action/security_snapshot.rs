@@ -4,7 +4,7 @@ use crate::Frame;
 use crate::Qot_GetSecuritySnapshot::{self, Request, Response, C2S};
 use protobuf::MessageField;
 
-const PROTO_ID: u32 = 3203;
+pub const PROTO_ID: u32 = 3203;
 
 #[derive(Debug)]
 pub struct GetSecuritySnapshotRequest(Vec<Security>);

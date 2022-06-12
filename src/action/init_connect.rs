@@ -3,7 +3,7 @@ use crate::Frame;
 use crate::InitConnect::{Request, Response, C2S};
 use protobuf::MessageField;
 
-const PROTO_ID: u32 = 1001;
+pub const PROTO_ID: u32 = 1001;
 
 #[derive(Debug)]
 pub struct InitConnectRequest {

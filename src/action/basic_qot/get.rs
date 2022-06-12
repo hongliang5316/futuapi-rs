@@ -4,7 +4,7 @@ use crate::Frame;
 use crate::Qot_GetBasicQot::{Request, Response, C2S};
 use protobuf::MessageField;
 
-const PROTO_ID: u32 = 3004;
+pub const PROTO_ID: u32 = 3004;
 
 #[derive(Debug)]
 pub struct GetBasicQotRequest(Vec<Security>);

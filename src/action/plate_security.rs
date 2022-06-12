@@ -5,7 +5,7 @@ use crate::Qot_Common::SortField;
 use crate::Qot_GetPlateSecurity::{Request, Response, C2S};
 use protobuf::MessageField;
 
-const PROTO_ID: u32 = 3205;
+pub const PROTO_ID: u32 = 3205;
 
 #[derive(Debug)]
 pub struct GetPlateSecurityRequest {
