@@ -1,3 +1,4 @@
+use crate::action::basic_qot::{self, update::UpdateData};
 use atomic_counter::{AtomicCounter, ConsistentCounter};
 use bytes::Buf;
 use crypto::digest::Digest;
@@ -17,7 +18,7 @@ lazy_static! {
 #[derive(Serialize, Deserialize, Debug)]
 pub struct APIProtoHeader {
     header_flag: [u8; 2],
-    proto_id: u32,
+    pub proto_id: u32,
     proto_fmt_type: u8,
     proto_ver: u8,
     serial_no: u32,
@@ -43,6 +44,7 @@ pub enum Error {
 pub struct Frame<T: MessageFull> {
     pub header: APIProtoHeader,
     pub body: T,
+    pub other: Option<UpdateData>,
 }
 
 fn sha1(msg: &[u8]) -> [u8; 20] {
@@ -93,10 +95,11 @@ impl<T: MessageFull> Frame<T> {
                 reserved: Default::default(),
             },
             body,
+            other: None,
         }
     }
 
-    pub fn parse(src: &mut Cursor<&[u8]>) -> Result<Frame<T>, Error> {
+    pub fn parse(src: &mut Cursor<&[u8]>, proto_id: u32) -> Result<Frame<T>, Error> {
         let header = get_header(src)?;
         if header.proto_fmt_type != 0 {
             return Err(Error::Other(
@@ -105,9 +108,29 @@ impl<T: MessageFull> Frame<T> {
         }
 
         let body_len = header.body_len;
-        Ok(Frame {
-            header,
-            body: get_body(src, body_len)?,
-        })
+
+        if header.proto_id == proto_id && proto_id != 0 {
+            return Ok(Frame {
+                header,
+                body: get_body(src, body_len)?,
+                other: None,
+            });
+        }
+
+        match header.proto_id {
+            basic_qot::update::PROTO_ID => {
+                let body: crate::Qot_UpdateBasicQot::Response = get_body(src, body_len)?;
+                return Ok(Frame {
+                    header,
+                    body: T::default(),
+                    other: Some(UpdateData::BasicQot(
+                        basic_qot::update::check_response(body).unwrap(),
+                    )),
+                });
+            }
+            proto_id => {
+                panic!("proto_id error: {}", proto_id);
+            }
+        }
     }
 }

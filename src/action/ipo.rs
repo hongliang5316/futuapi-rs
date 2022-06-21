@@ -5,7 +5,7 @@ use crate::Qot_Common::QotMarket;
 use crate::Qot_GetIpoList::{Request, Response, C2S};
 use protobuf::MessageField;
 
-const PROTO_ID: u32 = 3217;
+pub const PROTO_ID: u32 = 3217;
 
 #[derive(Debug)]
 pub struct GetIpoListRequest(QotMarket);

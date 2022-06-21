@@ -5,14 +5,14 @@ use crate::Qot_Common::{RehabType, SubType};
 use crate::Qot_Sub::{Request, Response, C2S};
 use protobuf::MessageField;
 
-const PROTO_ID: u32 = 3001;
+pub const PROTO_ID: u32 = 3001;
 
 #[derive(Debug)]
 pub struct SubscribeRequest {
-    security_list: Vec<Security>,
+    pub security_list: Vec<Security>,
     sub_type_list: Vec<SubType>,
-    is_sub_or_un_sub: bool,
-    is_reg_or_un_reg_push: Option<bool>,
+    pub is_sub_or_un_sub: bool,
+    pub is_reg_or_un_reg_push: Option<bool>,
     reg_push_rehab_type_list: Vec<RehabType>,
     is_first_push: Option<bool>,
     is_unsub_all: Option<bool>,

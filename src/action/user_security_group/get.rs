@@ -3,7 +3,7 @@ use crate::Frame;
 use crate::Qot_GetUserSecurityGroup::{GroupType, Request, Response, C2S};
 use protobuf::{Enum, MessageField};
 
-const PROTO_ID: u32 = 3222;
+pub const PROTO_ID: u32 = 3222;
 
 #[derive(Debug)]
 pub struct GetUserSecurityGroupRequest(GroupType);

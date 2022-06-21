@@ -5,7 +5,7 @@ use crate::Qot_Common::QotMarket;
 use crate::Qot_StockFilter::{self, AccumulateField, Request, Response, SortDir, StockField, C2S};
 use protobuf::{Enum, MessageField};
 
-const PROTO_ID: u32 = 3215;
+pub const PROTO_ID: u32 = 3215;
 
 pub struct BaseFilter {
     field_name: StockField,

@@ -4,7 +4,7 @@ use crate::Frame;
 use crate::Qot_ModifyUserSecurity::{ModifyUserSecurityOp, Request, Response, C2S};
 use protobuf::MessageField;
 
-const PROTO_ID: u32 = 3214;
+pub const PROTO_ID: u32 = 3214;
 
 #[derive(Debug)]
 pub struct ModifyUserSecurityGroupRequest {
