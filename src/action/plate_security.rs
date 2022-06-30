@@ -21,7 +21,7 @@ impl Into<Request> for GetPlateSecurityRequest {
         c2s.plate = MessageField::some(self.plate.into());
 
         if let Some(sort_field) = self.sort_field {
-            c2s.sortField = Some(sort_field as i32);
+            c2s.set_sortField(sort_field as i32);
         }
 
         c2s.ascend = self.ascend;

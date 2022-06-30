@@ -247,3 +247,20 @@ impl From<Qot_Common::BasicQot> for BasicQot {
         }
     }
 }
+
+#[derive(Debug)]
+pub struct KLine {
+    time: String,
+    is_blank: bool,
+    close_price: Option<f64>, // 收盘价
+}
+
+impl From<Qot_Common::KLine> for KLine {
+    fn from(k_line: Qot_Common::KLine) -> Self {
+        KLine {
+            time: k_line.time().into(),
+            is_blank: k_line.isBlank(),
+            close_price: k_line.closePrice,
+        }
+    }
+}
