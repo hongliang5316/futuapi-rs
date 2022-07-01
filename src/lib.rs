@@ -12,6 +12,7 @@ pub mod client;
 pub mod connection;
 pub use connection::Connection;
 pub mod frame;
+pub use frame::serial_no;
 pub use frame::Frame;
 
 pub type Error = Box<dyn std::error::Error + Send + Sync>;

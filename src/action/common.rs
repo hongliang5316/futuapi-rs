@@ -2,6 +2,7 @@ use crate::Common::{self, ProgramStatusType};
 use crate::Qot_Common::{
     self, DarkStatus, ExchType, PlateSetType, QotMarket, SecurityStatus, SecurityType,
 };
+use crate::Trd_Common::{self, TrdEnv, TrdMarket};
 use protobuf::Enum;
 use std::convert::TryFrom;
 
@@ -37,6 +38,38 @@ impl From<Qot_Common::SecurityStaticBasic> for SecurityStaticBasic {
 #[derive(Debug)]
 pub struct SecurityStaticInfo {
     pub basic: SecurityStaticBasic,
+}
+
+#[derive(Debug, Default)]
+pub struct PacketID {
+    pub conn_id: u64,
+    pub serial_no: u32,
+}
+
+impl Into<Common::PacketID> for PacketID {
+    fn into(self) -> Common::PacketID {
+        let mut packet_id = Common::PacketID::new();
+        packet_id.set_connID(self.conn_id);
+        packet_id.set_serialNo(self.serial_no);
+        packet_id
+    }
+}
+
+#[derive(Debug, Default)]
+pub struct TrdHeader {
+    pub trd_env: TrdEnv,
+    pub acc_id: u64,
+    pub trd_market: TrdMarket,
+}
+
+impl Into<Trd_Common::TrdHeader> for TrdHeader {
+    fn into(self) -> Trd_Common::TrdHeader {
+        let mut trd_header = Trd_Common::TrdHeader::new();
+        trd_header.set_trdEnv(self.trd_env as i32);
+        trd_header.set_accID(self.acc_id);
+        trd_header.set_trdMarket(self.trd_market as i32);
+        trd_header
+    }
 }
 
 pub struct PlateInfo {

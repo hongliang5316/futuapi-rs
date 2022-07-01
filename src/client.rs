@@ -1,3 +1,4 @@
+use crate::action::common::{PacketID, TrdHeader};
 use crate::action::{
     basic_qot::{
         self,
@@ -6,6 +7,10 @@ use crate::action::{
     global_state::{self, GetGlobalStateRequest, GetGlobalStateResponse},
     init_connect::{self, InitConnectRequest, InitConnectResponse},
     ipo::{self, GetIpoListRequest, GetIpoListResponse},
+    order::{
+        self,
+        place::{PlaceOrderRequest, PlaceOrderResponse},
+    },
     plate_security::{self, GetPlateSecurityRequest, GetPlateSecurityResponse},
     price_reminder::{
         self,
@@ -15,22 +20,28 @@ use crate::action::{
     security_snapshot::{self, GetSecuritySnapshotRequest, GetSecuritySnapshotResponse},
     stock_filter::{self, GetStockFilterRequest, GetStockFilterResponse},
     subscribe::{self, SubscribeRequest},
+    unlock::{self, UnlockRequest},
     user_security_group::{
         self,
         get::{GetUserSecurityGroupRequest, GetUserSecurityGroupResponse},
         modify::ModifyUserSecurityGroupRequest,
     },
 };
-use crate::{Connection, Frame};
+use crate::Trd_Common::{
+    OrderType, SecurityFirm, TimeInForce, TrailType, TrdEnv, TrdMarket, TrdSecMarket, TrdSide,
+};
+use crate::{serial_no, Connection, Frame};
+use md5;
 use tokio::net::{TcpStream, ToSocketAddrs};
 
 pub struct QotClient {
     connection: Connection,
 }
 
-// pub struct TrdClient {
-//     connection: Connection,
-// }
+pub struct TrdClient {
+    conn_id: u64,
+    connection: Connection,
+}
 
 pub async fn qot_connect<T: ToSocketAddrs>(addr: T) -> crate::Result<QotClient> {
     let socket = TcpStream::connect(addr).await.unwrap();
@@ -41,6 +52,104 @@ pub async fn qot_connect<T: ToSocketAddrs>(addr: T) -> crate::Result<QotClient> 
     client.init_connect().await?;
 
     Ok(client)
+}
+
+pub async fn trd_connect<T: ToSocketAddrs>(addr: T) -> crate::Result<TrdClient> {
+    let socket = TcpStream::connect(addr).await.unwrap();
+
+    let connection = Connection::new(socket);
+
+    let mut client = TrdClient {
+        conn_id: 0,
+        connection,
+    };
+
+    let init_connect_resp = client.init_connect().await?;
+    client.set_conn_id(init_connect_resp.conn_id);
+
+    Ok(client)
+}
+
+impl TrdClient {
+    fn set_conn_id(&mut self, id: u64) {
+        self.conn_id = id;
+    }
+
+    async fn init_connect(&mut self) -> crate::Result<InitConnectResponse> {
+        let frame = InitConnectRequest::default().into_frame();
+        self.connection.write_frame(&frame).await.unwrap();
+        let frame: Frame<crate::InitConnect::Response> =
+            self.connection.read_frame().await.unwrap().unwrap();
+        init_connect::check_response(frame.body)
+    }
+
+    pub async fn unlock(&mut self, pwd: String) -> crate::Result<()> {
+        let pwd_md5 = format!("{:x}", md5::compute(pwd));
+        let unlock_req =
+            UnlockRequest::new(pwd_md5, Some(SecurityFirm::SecurityFirm_FutuSecurities));
+        let frame = unlock_req.into_frame();
+        self.connection.write_frame(&frame).await.unwrap();
+        let frame: Frame<crate::Trd_UnlockTrade::Response> =
+            self.connection.read_frame().await.unwrap().unwrap();
+        unlock::check_response(frame.body)
+    }
+
+    pub async fn place_order(
+        &mut self,
+        acc_id: u64,
+        trd_env: TrdEnv,
+        trd_market: TrdMarket,
+        trd_side: TrdSide,
+        order_type: OrderType,
+        code: String,
+        qty: f64,
+        price: Option<f64>,
+        adjust_price: Option<bool>,
+        adjust_side_and_limit: Option<f64>,
+        sec_market: Option<TrdSecMarket>,
+        remark: Option<String>,
+        time_in_force: Option<TimeInForce>,
+        fill_outside_rth: Option<bool>,
+        aux_price: Option<f64>,
+        trail_type: Option<TrailType>,
+        trail_value: Option<f64>,
+        trail_spread: Option<f64>,
+    ) -> crate::Result<PlaceOrderResponse> {
+        let mut place_order_req = PlaceOrderRequest::default();
+
+        place_order_req.packet_id = PacketID {
+            conn_id: self.conn_id,
+            serial_no: serial_no(),
+        };
+
+        place_order_req.header = TrdHeader {
+            trd_env,
+            acc_id,
+            trd_market,
+        };
+
+        place_order_req.trd_side = trd_side;
+        place_order_req.order_type = order_type;
+        place_order_req.code = code;
+        place_order_req.qty = qty;
+        place_order_req.price = price;
+        place_order_req.adjust_price = adjust_price;
+        place_order_req.adjust_side_and_limit = adjust_side_and_limit;
+        place_order_req.sec_market = sec_market;
+        place_order_req.remark = remark;
+        place_order_req.time_in_force = time_in_force;
+        place_order_req.fill_outside_rth = fill_outside_rth;
+        place_order_req.aux_price = aux_price;
+        place_order_req.trail_type = trail_type;
+        place_order_req.trail_value = trail_value;
+        place_order_req.trail_spread = trail_spread;
+
+        let frame = place_order_req.into_frame();
+        self.connection.write_frame(&frame).await.unwrap();
+        let frame: Frame<crate::Trd_PlaceOrder::Response> =
+            self.connection.read_frame().await.unwrap().unwrap();
+        order::place::check_response(frame.body)
+    }
 }
 
 impl QotClient {

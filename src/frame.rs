@@ -75,10 +75,13 @@ fn get_body<T: MessageFull>(src: &mut Cursor<&[u8]>, len: u32) -> Result<T, Erro
     Ok(T::parse_from_bytes(src.copy_to_bytes(len as usize).as_ref()).unwrap())
 }
 
+pub fn serial_no() -> u32 {
+    SERIAL_NO.inc();
+    SERIAL_NO.get() as u32
+}
+
 impl<T: MessageFull> Frame<T> {
     pub fn new(body: T, proto_id: u32) -> Frame<T> {
-        SERIAL_NO.inc();
-
         let b = body.write_to_bytes().unwrap();
 
         Frame {
@@ -87,7 +90,7 @@ impl<T: MessageFull> Frame<T> {
                 proto_id,
                 proto_fmt_type: 0, // 0: protobuf 1: json
                 proto_ver: 0,
-                serial_no: SERIAL_NO.get() as u32,
+                serial_no: serial_no(),
                 body_len: b.len() as u32,
                 body_sha1: sha1(&b),
                 reserved: Default::default(),

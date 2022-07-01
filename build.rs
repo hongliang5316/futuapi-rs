@@ -18,6 +18,9 @@ fn main() {
             "proto/GetGlobalState.proto",
             "proto/Qot_GetPriceReminder.proto",
             "proto/Qot_SetPriceReminder.proto",
+            "proto/Trd_Common.proto",
+            "proto/Trd_UnlockTrade.proto",
+            "proto/Trd_PlaceOrder.proto",
         ])
         .cargo_out_dir("rust_protobuf_protos")
         .run_from_script();
