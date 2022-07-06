@@ -9,6 +9,7 @@ fn main() {
             "proto/Qot_GetIpoList.proto",
             "proto/Qot_GetSecuritySnapshot.proto",
             "proto/Qot_GetUserSecurityGroup.proto",
+            "proto/Qot_GetUserSecurity.proto",
             "proto/Qot_ModifyUserSecurity.proto",
             "proto/Qot_GetPlateSecurity.proto",
             "proto/Qot_StockFilter.proto",

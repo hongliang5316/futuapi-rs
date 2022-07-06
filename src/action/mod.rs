@@ -10,4 +10,5 @@ pub mod security_snapshot;
 pub mod stock_filter;
 pub mod subscribe;
 pub mod unlock;
+pub mod user_security;
 pub mod user_security_group;

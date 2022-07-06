@@ -40,6 +40,14 @@ pub struct SecurityStaticInfo {
     pub basic: SecurityStaticBasic,
 }
 
+impl From<Qot_Common::SecurityStaticInfo> for SecurityStaticInfo {
+    fn from(security_static_info: Qot_Common::SecurityStaticInfo) -> Self {
+        SecurityStaticInfo {
+            basic: security_static_info.basic.unwrap().into(),
+        }
+    }
+}
+
 #[derive(Debug, Default)]
 pub struct PacketID {
     pub conn_id: u64,

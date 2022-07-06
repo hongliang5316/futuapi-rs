@@ -21,6 +21,10 @@ use crate::action::{
     stock_filter::{self, GetStockFilterRequest, GetStockFilterResponse},
     subscribe::{self, SubscribeRequest},
     unlock::{self, UnlockRequest},
+    user_security::{
+        self,
+        get::{GetUserSecurityRequest, GetUserSecurityResponse},
+    },
     user_security_group::{
         self,
         get::{GetUserSecurityGroupRequest, GetUserSecurityGroupResponse},
@@ -192,6 +196,17 @@ impl QotClient {
         let frame: Frame<crate::Qot_GetUserSecurityGroup::Response> =
             self.connection.read_frame().await.unwrap().unwrap();
         user_security_group::get::check_response(frame.body)
+    }
+
+    pub async fn get_user_security(
+        &mut self,
+        get_user_security_req: GetUserSecurityRequest,
+    ) -> crate::Result<GetUserSecurityResponse> {
+        let frame = get_user_security_req.into_frame();
+        self.connection.write_frame(&frame).await.unwrap();
+        let frame: Frame<crate::Qot_GetUserSecurity::Response> =
+            self.connection.read_frame().await.unwrap().unwrap();
+        user_security::get::check_response(frame.body)
     }
 
     pub async fn modify_user_security_group(
