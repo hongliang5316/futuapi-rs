@@ -32,46 +32,46 @@ impl GetSecuritySnapshotRequest {
 
 #[derive(Debug)]
 pub struct SnapshotBasicData {
-    security: Security,
-    type_: i32,
-    is_suspend: bool,
-    list_time: String,
-    log_size: i32,
-    price_spread: f64,
-    update_time: String,
-    high_price: f64,
-    open_price: f64,
-    low_price: f64,
-    last_close_price: f64,
-    cur_price: f64,
-    volume: i64,
-    turnover: f64,      // 成交额
-    turnover_rate: f64, // 换手率
-    list_timestamp: Option<f64>,
-    update_timestamp: Option<f64>,
-    ask_price: Option<f64>,
-    bid_price: Option<f64>,
-    ask_vol: Option<i64>,
-    bid_vol: Option<i64>,
-    enable_margin: Option<bool>,
-    mortgage_ratio: Option<f64>,
-    long_margin_initial_ratio: Option<f64>,
-    enable_short_sell: Option<bool>,
-    short_sell_rate: Option<f64>,
-    short_available_volume: Option<i64>,
-    short_margin_initial_ratio: Option<f64>,
-    amplitude: Option<f64>,
-    avg_price: Option<f64>,
-    bid_ask_ratio: Option<f64>,
-    volume_ratio: Option<f64>,
-    highest_52_weeks_price: Option<f64>,
-    lowest_52_weeks_price: Option<f64>,
-    highest_history_price: Option<f64>,
-    lowest_history_price: Option<f64>,
-    pre_market: Option<PreAfterMarketData>,
-    after_market: Option<PreAfterMarketData>,
-    sec_status: Option<i32>,
-    close_price_5_minute: Option<f64>,
+    pub security: Security,
+    pub type_: i32,
+    pub is_suspend: bool,
+    pub list_time: String,
+    pub log_size: i32,
+    pub price_spread: f64,
+    pub update_time: String,
+    pub high_price: f64,
+    pub open_price: f64,
+    pub low_price: f64,
+    pub last_close_price: f64,
+    pub cur_price: f64,
+    pub volume: i64,
+    pub turnover: f64,      // 成交额
+    pub turnover_rate: f64, // 换手率
+    pub list_timestamp: Option<f64>,
+    pub update_timestamp: Option<f64>,
+    pub ask_price: Option<f64>,
+    pub bid_price: Option<f64>,
+    pub ask_vol: Option<i64>,
+    pub bid_vol: Option<i64>,
+    pub enable_margin: Option<bool>,
+    pub mortgage_ratio: Option<f64>,
+    pub long_margin_initial_ratio: Option<f64>,
+    pub enable_short_sell: Option<bool>,
+    pub short_sell_rate: Option<f64>,
+    pub short_available_volume: Option<i64>,
+    pub short_margin_initial_ratio: Option<f64>,
+    pub amplitude: Option<f64>,
+    pub avg_price: Option<f64>,
+    pub bid_ask_ratio: Option<f64>,
+    pub volume_ratio: Option<f64>,
+    pub highest_52_weeks_price: Option<f64>,
+    pub lowest_52_weeks_price: Option<f64>,
+    pub highest_history_price: Option<f64>,
+    pub lowest_history_price: Option<f64>,
+    pub pre_market: Option<PreAfterMarketData>,
+    pub after_market: Option<PreAfterMarketData>,
+    pub sec_status: Option<i32>,
+    pub close_price_5_minute: Option<f64>,
 }
 
 impl From<Qot_GetSecuritySnapshot::SnapshotBasicData> for SnapshotBasicData {
@@ -131,12 +131,12 @@ impl From<Qot_GetSecuritySnapshot::SnapshotBasicData> for SnapshotBasicData {
 
 #[derive(Debug)]
 pub struct Snapshot {
-    basic: SnapshotBasicData,
+    pub basic: SnapshotBasicData,
 }
 
 #[derive(Debug)]
 pub struct GetSecuritySnapshotResponse {
-    snapshot_list: Vec<Snapshot>,
+    pub snapshot_list: Vec<Snapshot>,
 }
 
 impl From<Response> for GetSecuritySnapshotResponse {

@@ -125,7 +125,7 @@ impl TryFrom<&str> for Security {
 
         Ok(Security {
             market: get_qot_market(v[0]),
-            code: v[1..].join(""),
+            code: v[1..].join("."),
         })
     }
 }
