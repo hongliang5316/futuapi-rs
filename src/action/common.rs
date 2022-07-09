@@ -96,7 +96,7 @@ impl From<Qot_Common::PlateInfo> for PlateInfo {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct Security {
     pub market: QotMarket,
     pub code: String,
@@ -180,14 +180,14 @@ impl Into<Vec<Qot_Common::Security>> for SecurityVec {
 
 #[derive(Debug)]
 pub struct PreAfterMarketData {
-    price: Option<f64>,
-    high_price: Option<f64>,
-    low_price: Option<f64>,
-    volume: Option<i64>,
-    turnover: Option<f64>,
-    change_val: Option<f64>,
-    change_rate: Option<f64>,
-    amplitude: Option<f64>,
+    pub price: Option<f64>,
+    pub high_price: Option<f64>,
+    pub low_price: Option<f64>,
+    pub volume: Option<i64>,
+    pub turnover: Option<f64>,
+    pub change_val: Option<f64>,
+    pub change_rate: Option<f64>,
+    pub amplitude: Option<f64>,
 }
 
 impl From<Qot_Common::PreAfterMarketData> for PreAfterMarketData {
