@@ -80,6 +80,41 @@ impl Into<Trd_Common::TrdHeader> for TrdHeader {
     }
 }
 
+impl From<Trd_Common::TrdHeader> for TrdHeader {
+    fn from(trd_header: Trd_Common::TrdHeader) -> Self {
+        TrdHeader {
+            trd_env: TrdEnv::from_i32(trd_header.trdEnv()).unwrap(),
+            acc_id: trd_header.accID(),
+            trd_market: TrdMarket::from_i32(trd_header.trdMarket()).unwrap(),
+        }
+    }
+}
+
+#[derive(Debug)]
+pub struct MaxTrdQtys {
+    pub max_cash_buy: f64,
+    pub max_cash_and_margin_buy: f64,
+    pub max_position_sell: f64,
+    pub max_sell_short: Option<f64>,
+    pub max_buy_back: Option<f64>,
+    pub long_required_i_m: Option<f64>,
+    pub short_required_i_m: Option<f64>,
+}
+
+impl From<Trd_Common::MaxTrdQtys> for MaxTrdQtys {
+    fn from(max_trd_qtys: Trd_Common::MaxTrdQtys) -> Self {
+        MaxTrdQtys {
+            max_cash_buy: max_trd_qtys.maxCashBuy(),
+            max_cash_and_margin_buy: max_trd_qtys.maxCashAndMarginBuy(),
+            max_position_sell: max_trd_qtys.maxPositionSell(),
+            max_sell_short: max_trd_qtys.maxSellShort,
+            max_buy_back: max_trd_qtys.maxBuyBack,
+            long_required_i_m: max_trd_qtys.longRequiredIM,
+            short_required_i_m: max_trd_qtys.shortRequiredIM,
+        }
+    }
+}
+
 pub struct PlateInfo {
     pub plate: Security,
     pub name: String,

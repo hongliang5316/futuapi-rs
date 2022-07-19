@@ -7,6 +7,7 @@ use crate::action::{
     global_state::{self, GetGlobalStateRequest, GetGlobalStateResponse},
     init_connect::{self, InitConnectRequest, InitConnectResponse},
     ipo::{self, GetIpoListRequest, GetIpoListResponse},
+    max_trd_qtys::{self, GetMaxTrdQtysRequest, GetMaxTrdQtysResponse},
     order::{
         self,
         place::{PlaceOrderRequest, PlaceOrderResponse},
@@ -96,6 +97,17 @@ impl TrdClient {
         let frame: Frame<crate::Trd_UnlockTrade::Response> =
             self.connection.read_frame().await.unwrap().unwrap();
         unlock::check_response(frame.body)
+    }
+
+    pub async fn get_max_trd_qtys(
+        &mut self,
+        get_max_trd_qtys_req: GetMaxTrdQtysRequest,
+    ) -> crate::Result<GetMaxTrdQtysResponse> {
+        let frame = get_max_trd_qtys_req.into_frame();
+        self.connection.write_frame(&frame).await.unwrap();
+        let frame: Frame<crate::Trd_GetMaxTrdQtys::Response> =
+            self.connection.read_frame().await.unwrap().unwrap();
+        max_trd_qtys::check_response(frame.body)
     }
 
     pub async fn place_order(

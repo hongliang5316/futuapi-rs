@@ -3,6 +3,7 @@ pub mod common;
 pub mod global_state;
 pub mod init_connect;
 pub mod ipo;
+pub mod max_trd_qtys;
 pub mod order;
 pub mod plate_security;
 pub mod price_reminder;
