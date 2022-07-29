@@ -234,7 +234,7 @@ impl From<Qot_Common::PreAfterMarketData> for PreAfterMarketData {
             volume: pre_after_market_data.volume,
             turnover: pre_after_market_data.turnover,
             change_val: pre_after_market_data.changeVal,
-            change_rate: pre_after_market_data.changeVal,
+            change_rate: pre_after_market_data.changeRate,
             amplitude: pre_after_market_data.amplitude,
         }
     }
