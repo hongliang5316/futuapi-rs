@@ -4,6 +4,7 @@ use crate::Qot_Common::{
 };
 use crate::Trd_Common::{self, TrdEnv, TrdMarket};
 use protobuf::Enum;
+use serde::Serialize;
 use std::convert::TryFrom;
 
 #[derive(Debug)]
@@ -63,7 +64,7 @@ impl Into<Common::PacketID> for PacketID {
     }
 }
 
-#[derive(Debug, Default)]
+#[derive(Debug, Default, Serialize)]
 pub struct Position {
     pub position_id: u64,
     pub code: String,
