@@ -64,6 +64,33 @@ impl Into<Common::PacketID> for PacketID {
 }
 
 #[derive(Debug, Default)]
+pub struct Position {
+    pub position_id: u64,
+    pub code: String,
+    pub qty: f64,
+    pub can_sell_qty: f64,
+    pub price: f64,              // 市价
+    pub pl_val: f64,             // 盈亏金额
+    pub cost_price: Option<f64>, // 摊薄成本价
+    pub pl_ratio: Option<f64>,   // 盈亏百分比
+}
+
+impl From<Trd_Common::Position> for Position {
+    fn from(position: Trd_Common::Position) -> Self {
+        Position {
+            position_id: position.positionID(),
+            code: position.code().to_string(),
+            qty: position.qty(),
+            can_sell_qty: position.canSellQty(),
+            price: position.price(),
+            pl_val: position.plVal(),
+            cost_price: position.costPrice,
+            pl_ratio: position.plRatio,
+        }
+    }
+}
+
+#[derive(Debug, Default)]
 pub struct TrdHeader {
     pub trd_env: TrdEnv,
     pub acc_id: u64,

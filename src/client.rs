@@ -13,6 +13,7 @@ use crate::action::{
         place::{PlaceOrderRequest, PlaceOrderResponse},
     },
     plate_security::{self, GetPlateSecurityRequest, GetPlateSecurityResponse},
+    position_list::{self, GetPositionListRequest, GetPositionListResponse},
     price_reminder::{
         self,
         get::{GetPriceReminderRequest, GetPriceReminderResponse},
@@ -108,6 +109,17 @@ impl TrdClient {
         let frame: Frame<crate::Trd_GetMaxTrdQtys::Response> =
             self.connection.read_frame().await.unwrap().unwrap();
         max_trd_qtys::check_response(frame.body)
+    }
+
+    pub async fn get_position_list(
+        &mut self,
+        get_position_list_req: GetPositionListRequest,
+    ) -> crate::Result<GetPositionListResponse> {
+        let frame = get_position_list_req.into_frame();
+        self.connection.write_frame(&frame).await.unwrap();
+        let frame: Frame<crate::Trd_GetPositionList::Response> =
+            self.connection.read_frame().await.unwrap().unwrap();
+        position_list::check_response(frame.body)
     }
 
     pub async fn place_order(

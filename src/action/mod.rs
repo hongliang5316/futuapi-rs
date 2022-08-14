@@ -6,6 +6,7 @@ pub mod ipo;
 pub mod max_trd_qtys;
 pub mod order;
 pub mod plate_security;
+pub mod position_list;
 pub mod price_reminder;
 pub mod security_snapshot;
 pub mod stock_filter;

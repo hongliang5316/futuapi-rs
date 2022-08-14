@@ -68,7 +68,7 @@ pub struct GetMaxTrdQtysResponse {
 impl From<Response> for GetMaxTrdQtysResponse {
     fn from(resp: Response) -> Self {
         let S2C {
-            header: header,
+            header,
             maxTrdQtys: max_trd_qtys,
             ..
         } = resp.s2c.unwrap();
