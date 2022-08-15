@@ -9,6 +9,7 @@ const PROTO_ID: u32 = 2102;
 #[derive(Debug, Default)]
 pub struct GetPositionListRequest {
     pub header: TrdHeader,
+    pub refresh_cache: Option<bool>,
 }
 
 impl Into<Request> for GetPositionListRequest {
@@ -16,6 +17,7 @@ impl Into<Request> for GetPositionListRequest {
         let mut req = Request::new();
         let mut c2s = C2S::new();
         c2s.header = MessageField::some(self.header.into());
+        c2s.refreshCache = self.refresh_cache;
         req.c2s = MessageField::some(c2s);
 
         req
@@ -23,8 +25,11 @@ impl Into<Request> for GetPositionListRequest {
 }
 
 impl GetPositionListRequest {
-    pub fn new(header: TrdHeader) -> Self {
-        GetPositionListRequest { header }
+    pub fn new(header: TrdHeader, refresh_cache: Option<bool>) -> Self {
+        GetPositionListRequest {
+            header,
+            refresh_cache,
+        }
     }
 
     pub fn into_frame(self) -> Frame<Request> {
