@@ -110,6 +110,7 @@ pub struct Position {
     pub pl_val: f64,             // 盈亏金额
     pub cost_price: Option<f64>, // 摊薄成本价
     pub pl_ratio: Option<f64>,   // 盈亏百分比
+    pub td_pl_val: Option<f64>,  // 今日盈亏金额
 }
 
 impl From<Trd_Common::Position> for Position {
@@ -123,6 +124,7 @@ impl From<Trd_Common::Position> for Position {
             pl_val: position.plVal(),
             cost_price: position.costPrice,
             pl_ratio: position.plRatio,
+            td_pl_val: position.td_plVal,
         }
     }
 }
