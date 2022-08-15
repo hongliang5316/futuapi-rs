@@ -2,7 +2,7 @@ use crate::Common::{self, ProgramStatusType};
 use crate::Qot_Common::{
     self, DarkStatus, ExchType, PlateSetType, QotMarket, SecurityStatus, SecurityType,
 };
-use crate::Trd_Common::{self, TrdEnv, TrdMarket};
+use crate::Trd_Common::{self, OrderStatus, TrdEnv, TrdMarket};
 use protobuf::Enum;
 use serde::Serialize;
 use std::convert::TryFrom;
@@ -61,6 +61,42 @@ impl Into<Common::PacketID> for PacketID {
         packet_id.set_connID(self.conn_id);
         packet_id.set_serialNo(self.serial_no);
         packet_id
+    }
+}
+
+#[derive(Debug, Default, Serialize)]
+pub struct TrdFilterConditions {
+    pub code_list: Vec<String>,
+    pub id_list: Vec<u64>,
+    pub begin_time: Option<String>,
+    pub end_time: Option<String>,
+}
+
+impl Into<Trd_Common::TrdFilterConditions> for TrdFilterConditions {
+    fn into(self) -> Trd_Common::TrdFilterConditions {
+        let mut trd_filter_conditions = Trd_Common::TrdFilterConditions::new();
+        trd_filter_conditions.codeList = self.code_list;
+        trd_filter_conditions.idList = self.id_list;
+        trd_filter_conditions.beginTime = self.begin_time;
+        trd_filter_conditions.endTime = self.end_time;
+        trd_filter_conditions
+    }
+}
+
+#[derive(Debug, Default)]
+pub struct Order {
+    pub order_id: u64,
+    pub code: String,
+    pub order_status: OrderStatus,
+}
+
+impl From<Trd_Common::Order> for Order {
+    fn from(order: Trd_Common::Order) -> Self {
+        Order {
+            order_id: order.orderID(),
+            code: order.code().to_string(),
+            order_status: OrderStatus::from_i32(order.orderStatus()).unwrap(),
+        }
     }
 }
 

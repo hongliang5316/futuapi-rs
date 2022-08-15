@@ -5,11 +5,13 @@ use crate::action::{
         get::{GetBasicQotRequest, GetBasicQotResponse},
     },
     global_state::{self, GetGlobalStateRequest, GetGlobalStateResponse},
+    history_order_list::{self, GetHistoryOrderListRequest, GetHistoryOrderListResponse},
     init_connect::{self, InitConnectRequest, InitConnectResponse},
     ipo::{self, GetIpoListRequest, GetIpoListResponse},
     max_trd_qtys::{self, GetMaxTrdQtysRequest, GetMaxTrdQtysResponse},
     order::{
         self,
+        modify::{ModifyOrderRequest, ModifyOrderResponse},
         place::{PlaceOrderRequest, PlaceOrderResponse},
     },
     plate_security::{self, GetPlateSecurityRequest, GetPlateSecurityResponse},
@@ -34,7 +36,8 @@ use crate::action::{
     },
 };
 use crate::Trd_Common::{
-    OrderType, SecurityFirm, TimeInForce, TrailType, TrdEnv, TrdMarket, TrdSecMarket, TrdSide,
+    ModifyOrderOp, OrderType, SecurityFirm, TimeInForce, TrailType, TrdEnv, TrdMarket,
+    TrdSecMarket, TrdSide,
 };
 use crate::{serial_no, Connection, Frame};
 use md5;
@@ -120,6 +123,45 @@ impl TrdClient {
         let frame: Frame<crate::Trd_GetPositionList::Response> =
             self.connection.read_frame().await.unwrap().unwrap();
         position_list::check_response(frame.body)
+    }
+
+    pub async fn get_history_order_list(
+        &mut self,
+        get_history_order_list_req: GetHistoryOrderListRequest,
+    ) -> crate::Result<GetHistoryOrderListResponse> {
+        let frame = get_history_order_list_req.into_frame();
+        self.connection.write_frame(&frame).await.unwrap();
+        let frame: Frame<crate::Trd_GetHistoryOrderList::Response> =
+            self.connection.read_frame().await.unwrap().unwrap();
+        history_order_list::check_response(frame.body)
+    }
+
+    pub async fn modify_order(
+        &mut self,
+        acc_id: u64,
+        trd_env: TrdEnv,
+        trd_market: TrdMarket,
+        order_id: u64,
+        modify_order_op: ModifyOrderOp,
+    ) -> crate::Result<ModifyOrderResponse> {
+        let modify_order_req = ModifyOrderRequest::new(
+            PacketID {
+                conn_id: self.conn_id,
+                serial_no: serial_no(),
+            },
+            TrdHeader {
+                acc_id,
+                trd_env,
+                trd_market,
+            },
+            order_id,
+            modify_order_op,
+        );
+        let frame = modify_order_req.into_frame();
+        self.connection.write_frame(&frame).await.unwrap();
+        let frame: Frame<crate::Trd_ModifyOrder::Response> =
+            self.connection.read_frame().await.unwrap().unwrap();
+        order::modify::check_response(frame.body)
     }
 
     pub async fn place_order(

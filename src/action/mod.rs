@@ -1,6 +1,7 @@
 pub mod basic_qot;
 pub mod common;
 pub mod global_state;
+pub mod history_order_list;
 pub mod init_connect;
 pub mod ipo;
 pub mod max_trd_qtys;

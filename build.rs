@@ -24,6 +24,8 @@ fn main() {
             "proto/Trd_PlaceOrder.proto",
             "proto/Trd_GetMaxTrdQtys.proto",
             "proto/Trd_GetPositionList.proto",
+            "proto/Trd_GetHistoryOrderList.proto",
+            "proto/Trd_ModifyOrder.proto",
         ])
         .cargo_out_dir("rust_protobuf_protos")
         .run_from_script();
