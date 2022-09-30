@@ -1,4 +1,4 @@
-use super::super::common::{Security, SecurityVec};
+use crate::action::common::{Security, SecurityVec};
 use crate::Common::RetType;
 use crate::Frame;
 use crate::Qot_ModifyUserSecurity::{ModifyUserSecurityOp, Request, Response, C2S};
@@ -6,14 +6,13 @@ use protobuf::MessageField;
 
 const PROTO_ID: u32 = 3214;
 
-#[derive(Debug)]
-pub struct ModifyUserSecurityGroupRequest {
-    group_name: String,
-    op: ModifyUserSecurityOp,
-    security_list: Vec<Security>,
+pub struct ModifyUserSecurityRequest {
+    pub group_name: String,
+    pub op: ModifyUserSecurityOp,
+    pub security_list: Vec<Security>,
 }
 
-impl Into<Request> for ModifyUserSecurityGroupRequest {
+impl Into<Request> for ModifyUserSecurityRequest {
     fn into(self) -> Request {
         let mut req = Request::new();
         let mut c2s = C2S::new();
@@ -26,16 +25,16 @@ impl Into<Request> for ModifyUserSecurityGroupRequest {
     }
 }
 
-impl ModifyUserSecurityGroupRequest {
-    pub fn new(group_name: &str, op: ModifyUserSecurityOp, security_list: Vec<Security>) -> Self {
-        ModifyUserSecurityGroupRequest {
-            group_name: group_name.into(),
+impl ModifyUserSecurityRequest {
+    pub fn new(group_name: String, op: ModifyUserSecurityOp, security_list: Vec<Security>) -> Self {
+        ModifyUserSecurityRequest {
+            group_name,
             op,
             security_list,
         }
     }
 
-    pub(crate) fn into_frame(self) -> Frame<Request> {
+    pub fn into_frame(self) -> Frame<Request> {
         Frame::new(self.into(), PROTO_ID)
     }
 }
@@ -45,5 +44,5 @@ pub fn check_response(resp: Response) -> crate::Result<()> {
         return Ok(());
     }
 
-    Err(resp.retMsg().into())
+    Err(format!("{}: {}", resp.retType(), resp.retMsg()).into())
 }

@@ -28,11 +28,11 @@ use crate::action::{
     user_security::{
         self,
         get::{GetUserSecurityRequest, GetUserSecurityResponse},
+        modify::ModifyUserSecurityRequest,
     },
     user_security_group::{
         self,
         get::{GetUserSecurityGroupRequest, GetUserSecurityGroupResponse},
-        modify::ModifyUserSecurityGroupRequest,
     },
 };
 use crate::Trd_Common::{
@@ -275,15 +275,15 @@ impl QotClient {
         user_security::get::check_response(frame.body)
     }
 
-    pub async fn modify_user_security_group(
+    pub async fn modify_user_security(
         &mut self,
-        modify_user_security_group_req: ModifyUserSecurityGroupRequest,
+        modify_user_security_req: ModifyUserSecurityRequest,
     ) -> crate::Result<()> {
-        let frame = modify_user_security_group_req.into_frame();
+        let frame = modify_user_security_req.into_frame();
         self.connection.write_frame(&frame).await.unwrap();
         let frame: Frame<crate::Qot_ModifyUserSecurity::Response> =
             self.connection.read_frame().await.unwrap().unwrap();
-        user_security_group::modify::check_response(frame.body)
+        user_security::modify::check_response(frame.body)
     }
 
     pub async fn get_plate_security(
