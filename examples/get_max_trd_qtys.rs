@@ -16,6 +16,7 @@ pub async fn main() -> Result<()> {
             OrderType::OrderType_Normal,
             "AAPL".to_string(),
             1.0,
+            TrdSecMarket::TrdSecMarket_US,
         ))
         .await?;
 

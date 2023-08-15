@@ -41,7 +41,13 @@ impl Into<Request> for GetMaxTrdQtysRequest {
 }
 
 impl GetMaxTrdQtysRequest {
-    pub fn new(header: TrdHeader, order_type: OrderType, code: String, price: f64) -> Self {
+    pub fn new(
+        header: TrdHeader,
+        order_type: OrderType,
+        code: String,
+        price: f64,
+        sec_market: TrdSecMarket,
+    ) -> Self {
         GetMaxTrdQtysRequest {
             header,
             order_type,
@@ -50,7 +56,7 @@ impl GetMaxTrdQtysRequest {
             order_id: None,
             adjust_price: None,
             adjust_side_and_limit: None,
-            sec_market: None,
+            sec_market: Some(sec_market),
         }
     }
 
