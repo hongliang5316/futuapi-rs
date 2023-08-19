@@ -2,7 +2,7 @@ use crate::Common::{self, ProgramStatusType};
 use crate::Qot_Common::{
     self, DarkStatus, ExchType, PlateSetType, QotMarket, SecurityStatus, SecurityType,
 };
-use crate::Trd_Common::{self, OrderStatus, TrdEnv, TrdMarket};
+use crate::Trd_Common::{self, OrderStatus, TrdEnv, TrdMarket, TrdSide};
 use protobuf::Enum;
 use serde::Serialize;
 use std::convert::TryFrom;
@@ -85,19 +85,23 @@ impl Into<Trd_Common::TrdFilterConditions> for TrdFilterConditions {
 
 #[derive(Debug, Default)]
 pub struct Order {
+    pub trd_side: TrdSide,
     pub order_id: u64,
     pub code: String,
     pub order_status: OrderStatus,
     pub qty: f64,
+    pub price: f64,
 }
 
 impl From<Trd_Common::Order> for Order {
     fn from(order: Trd_Common::Order) -> Self {
         Order {
+            trd_side: TrdSide::from_i32(order.trdSide()).unwrap(),
             order_id: order.orderID(),
             code: order.code().to_string(),
             order_status: OrderStatus::from_i32(order.orderStatus()).unwrap(),
             qty: order.qty(),
+            price: order.price(),
         }
     }
 }
