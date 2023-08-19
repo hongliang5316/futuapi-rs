@@ -6,8 +6,8 @@ use std::collections::HashMap;
 
 #[tokio::main]
 pub async fn main() -> Result<()> {
-    let mut client = client::qot_connect("127.0.0.1:11111").await?;
-    let code_info: Vec<_> = client
+    let mut qot_client = client::qot_connect("127.0.0.1:11111").await?;
+    let code_info: Vec<_> = qot_client
         .get_stock_filter(GetStockFilterRequest::new(
             0,
             10,

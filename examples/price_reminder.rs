@@ -7,8 +7,8 @@ use futuapi_rs::{client, Result};
 
 #[tokio::main]
 pub async fn main() -> Result<()> {
-    let mut client = client::qot_connect("127.0.0.1:11111").await?;
-    let set_price_reminder_resp = client
+    let mut qot_client = client::qot_connect("127.0.0.1:11111").await?;
+    let set_price_reminder_resp = qot_client
         .set_price_reminder(SetPriceReminderRequest::new(
             "US.CEI".try_into().unwrap(),
             SetPriceReminderOp::SetPriceReminderOp_Add,
@@ -22,7 +22,7 @@ pub async fn main() -> Result<()> {
 
     println!("{:?}", set_price_reminder_resp);
 
-    let get_price_reminder_resp = client
+    let get_price_reminder_resp = qot_client
         .get_price_reminder(GetPriceReminderRequest::new(
             Some("US.CEI".try_into().unwrap()),
             None,
@@ -31,7 +31,7 @@ pub async fn main() -> Result<()> {
 
     println!("{:?}", get_price_reminder_resp);
 
-    client
+    qot_client
         .set_price_reminder(SetPriceReminderRequest::new(
             "US.CEI".try_into().unwrap(),
             SetPriceReminderOp::SetPriceReminderOp_DelAll,

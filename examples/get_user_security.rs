@@ -3,8 +3,8 @@ use futuapi_rs::{client, Result};
 
 #[tokio::main]
 pub async fn main() -> Result<()> {
-    let mut client = client::qot_connect("127.0.0.1:11111").await?;
-    let get_user_security_resp = client
+    let mut qot_client = client::qot_connect("127.0.0.1:11111").await?;
+    let get_user_security_resp = qot_client
         .get_user_security(GetUserSecurityRequest::new("A".into()))
         .await?;
 

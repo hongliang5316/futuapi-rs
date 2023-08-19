@@ -4,8 +4,8 @@ use futuapi_rs::{client, Result};
 
 #[tokio::main]
 pub async fn main() -> Result<()> {
-    let mut client = client::qot_connect("127.0.0.1:11111").await?;
-    client
+    let mut qot_client = client::qot_connect("127.0.0.1:11111").await?;
+    qot_client
         .modify_user_security(ModifyUserSecurityRequest::new(
             "自选".to_string(),
             ModifyUserSecurityOp::ModifyUserSecurityOp_Add,
