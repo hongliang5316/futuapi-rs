@@ -5,8 +5,8 @@ use futuapi_rs::{client, Result};
 
 #[tokio::main]
 pub async fn main() -> Result<()> {
-    let mut client = client::trd_connect("127.0.0.1:11111").await?;
-    let get_max_trd_qtys_resp = client
+    let mut trd_client = client::trd_connect("127.0.0.1:11111").await?;
+    let get_max_trd_qtys_resp = trd_client
         .get_max_trd_qtys(GetMaxTrdQtysRequest::new(
             TrdHeader {
                 trd_env: TrdEnv::TrdEnv_Real,

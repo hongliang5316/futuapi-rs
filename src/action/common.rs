@@ -88,6 +88,7 @@ pub struct Order {
     pub order_id: u64,
     pub code: String,
     pub order_status: OrderStatus,
+    pub qty: f64,
 }
 
 impl From<Trd_Common::Order> for Order {
@@ -96,6 +97,7 @@ impl From<Trd_Common::Order> for Order {
             order_id: order.orderID(),
             code: order.code().to_string(),
             order_status: OrderStatus::from_i32(order.orderStatus()).unwrap(),
+            qty: order.qty(),
         }
     }
 }

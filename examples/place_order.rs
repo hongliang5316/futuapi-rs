@@ -3,10 +3,10 @@ use futuapi_rs::{client, Result};
 
 #[tokio::main]
 pub async fn main() -> Result<()> {
-    let mut client = client::trd_connect("127.0.0.1:11111").await?;
-    client.unlock("123456".into()).await?;
+    let mut trd_client = client::trd_connect("127.0.0.1:11111").await?;
+    trd_client.unlock("123456".into()).await?;
 
-    let place_order_resp = client
+    let place_order_resp = trd_client
         .place_order(
             123456,
             TrdEnv::TrdEnv_Real,
