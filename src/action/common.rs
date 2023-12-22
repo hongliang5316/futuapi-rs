@@ -83,7 +83,7 @@ impl Into<Trd_Common::TrdFilterConditions> for TrdFilterConditions {
     }
 }
 
-#[derive(Debug, Default)]
+#[derive(Debug, Default, Clone)]
 pub struct Order {
     pub trd_side: TrdSide,
     pub order_id: u64,
