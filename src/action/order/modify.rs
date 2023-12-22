@@ -13,6 +13,8 @@ pub struct ModifyOrderRequest {
     pub header: TrdHeader,
     pub order_id: u64,
     pub modify_order_op: ModifyOrderOp,
+    pub qty: Option<f64>,
+    pub price: Option<f64>,
 }
 
 impl Into<Request> for ModifyOrderRequest {
@@ -23,6 +25,8 @@ impl Into<Request> for ModifyOrderRequest {
         c2s.header = MessageField::some(self.header.into());
         c2s.set_orderID(self.order_id);
         c2s.set_modifyOrderOp(self.modify_order_op as i32);
+        c2s.qty = self.qty;
+        c2s.price = self.price;
 
         req.c2s = MessageField::some(c2s);
         req
@@ -35,12 +39,16 @@ impl ModifyOrderRequest {
         header: TrdHeader,
         order_id: u64,
         modify_order_op: ModifyOrderOp,
+        qty: Option<f64>,
+        price: Option<f64>,
     ) -> Self {
         ModifyOrderRequest {
             packet_id,
             header,
             order_id,
             modify_order_op,
+            qty,
+            price,
         }
     }
 

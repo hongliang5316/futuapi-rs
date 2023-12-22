@@ -143,6 +143,8 @@ impl TrdClient {
         trd_market: TrdMarket,
         order_id: u64,
         modify_order_op: ModifyOrderOp,
+        qty: Option<f64>,
+        price: Option<f64>,
     ) -> crate::Result<ModifyOrderResponse> {
         let modify_order_req = ModifyOrderRequest::new(
             PacketID {
@@ -156,6 +158,8 @@ impl TrdClient {
             },
             order_id,
             modify_order_op,
+            qty,
+            price,
         );
         let frame = modify_order_req.into_frame();
         self.connection.write_frame(&frame).await.unwrap();
