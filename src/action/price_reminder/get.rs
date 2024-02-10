@@ -8,8 +8,8 @@ use protobuf::{Enum, MessageField};
 const PROTO_ID: u32 = 3221;
 
 pub struct GetPriceReminderRequest {
-    security: Option<Security>,
-    market: Option<QotMarket>,
+    pub security: Option<Security>,
+    pub market: Option<QotMarket>,
 }
 
 impl Into<Request> for GetPriceReminderRequest {
