@@ -85,7 +85,7 @@ impl From<Qot_GetPriceReminder::PriceReminder> for PriceReminder {
 }
 
 #[derive(Debug)]
-pub struct GetPriceReminderResponse(Vec<PriceReminder>);
+pub struct GetPriceReminderResponse(pub Vec<PriceReminder>);
 
 impl From<Response> for GetPriceReminderResponse {
     fn from(resp: Response) -> Self {
