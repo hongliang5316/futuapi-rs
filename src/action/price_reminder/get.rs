@@ -66,8 +66,8 @@ impl From<Qot_GetPriceReminder::PriceReminderItem> for PriceReminderItem {
 
 #[derive(Debug)]
 pub struct PriceReminder {
-    security: Security,
-    item_list: Vec<PriceReminderItem>,
+    pub security: Security,
+    pub item_list: Vec<PriceReminderItem>,
 }
 
 impl From<Qot_GetPriceReminder::PriceReminder> for PriceReminder {
