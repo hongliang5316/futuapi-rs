@@ -43,12 +43,12 @@ impl GetPriceReminderRequest {
 
 #[derive(Debug)]
 pub struct PriceReminderItem {
-    key: i64,
-    type_: PriceReminderType,
-    value: f64,
-    note: String,
-    freq: PriceReminderFreq,
-    is_enable: bool,
+    pub key: i64,
+    pub type_: PriceReminderType,
+    pub value: f64,
+    pub note: String,
+    pub freq: PriceReminderFreq,
+    pub is_enable: bool,
 }
 
 impl From<Qot_GetPriceReminder::PriceReminderItem> for PriceReminderItem {
