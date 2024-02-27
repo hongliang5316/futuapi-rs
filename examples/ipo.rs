@@ -1,5 +1,4 @@
-use futuapi_rs::action::ipo::GetIpoListRequest;
-use futuapi_rs::{client, Result};
+use futuapi_rs::{action::ipo::GetIpoListRequest, client, Result};
 
 #[tokio::main]
 pub async fn main() -> Result<()> {

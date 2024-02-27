@@ -1,7 +1,6 @@
 use atomic_counter::{AtomicCounter, ConsistentCounter};
 use bytes::Buf;
-use crypto::digest::Digest;
-use crypto::sha1::Sha1;
+use crypto::{digest::Digest, sha1::Sha1};
 use protobuf::MessageFull;
 use serde::{Deserialize, Serialize};
 use std::io::Cursor;

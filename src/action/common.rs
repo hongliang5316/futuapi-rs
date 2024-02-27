@@ -1,8 +1,10 @@
-use crate::Common::{self, ProgramStatusType};
-use crate::Qot_Common::{
-    self, DarkStatus, ExchType, PlateSetType, QotMarket, SecurityStatus, SecurityType,
+use crate::{
+    Common::{self, ProgramStatusType},
+    Qot_Common::{
+        self, DarkStatus, ExchType, PlateSetType, QotMarket, SecurityStatus, SecurityType,
+    },
+    Trd_Common::{self, OrderStatus, TrdEnv, TrdMarket, TrdSide},
 };
-use crate::Trd_Common::{self, OrderStatus, TrdEnv, TrdMarket, TrdSide};
 use protobuf::Enum;
 use serde::Serialize;
 use std::convert::TryFrom;

@@ -1,8 +1,10 @@
 use super::super::common::{PacketID, TrdHeader};
-use crate::Common::RetType;
-use crate::Frame;
-use crate::Trd_Common::ModifyOrderOp;
-use crate::Trd_ModifyOrder::{Request, Response, C2S};
+use crate::{
+    Common::RetType,
+    Frame,
+    Trd_Common::ModifyOrderOp,
+    Trd_ModifyOrder::{Request, Response, C2S},
+};
 use protobuf::MessageField;
 
 const PROTO_ID: u32 = 2205;

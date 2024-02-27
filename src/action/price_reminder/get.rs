@@ -1,8 +1,10 @@
 use super::super::common::Security;
-use crate::Common::RetType;
-use crate::Frame;
-use crate::Qot_Common::{PriceReminderFreq, PriceReminderType, QotMarket};
-use crate::Qot_GetPriceReminder::{self, Request, Response, C2S};
+use crate::{
+    Common::RetType,
+    Frame,
+    Qot_Common::{PriceReminderFreq, PriceReminderType, QotMarket},
+    Qot_GetPriceReminder::{self, Request, Response, C2S},
+};
 use protobuf::{Enum, MessageField};
 
 const PROTO_ID: u32 = 3221;

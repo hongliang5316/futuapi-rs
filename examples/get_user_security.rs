@@ -1,5 +1,4 @@
-use futuapi_rs::action::user_security::get::GetUserSecurityRequest;
-use futuapi_rs::{client, Result};
+use futuapi_rs::{action::user_security::get::GetUserSecurityRequest, client, Result};
 
 #[tokio::main]
 pub async fn main() -> Result<()> {

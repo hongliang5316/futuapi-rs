@@ -1,5 +1,7 @@
-use futuapi_rs::Trd_Common::{OrderType, TimeInForce, TrdEnv, TrdMarket, TrdSecMarket, TrdSide};
-use futuapi_rs::{client, Result};
+use futuapi_rs::{
+    client, Result,
+    Trd_Common::{OrderType, TimeInForce, TrdEnv, TrdMarket, TrdSecMarket, TrdSide},
+};
 
 #[tokio::main]
 pub async fn main() -> Result<()> {

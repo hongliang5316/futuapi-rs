@@ -1,7 +1,9 @@
 use super::super::common::SecurityStaticInfo;
-use crate::Common::RetType;
-use crate::Frame;
-use crate::Qot_GetUserSecurity::{Request, Response, C2S};
+use crate::{
+    Common::RetType,
+    Frame,
+    Qot_GetUserSecurity::{Request, Response, C2S},
+};
 use protobuf::MessageField;
 
 const PROTO_ID: u32 = 3213;

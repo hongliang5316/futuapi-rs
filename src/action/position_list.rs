@@ -1,7 +1,9 @@
 use super::common::{Position, TrdHeader};
-use crate::Common::RetType;
-use crate::Frame;
-use crate::Trd_GetPositionList::{Request, Response, C2S};
+use crate::{
+    Common::RetType,
+    Frame,
+    Trd_GetPositionList::{Request, Response, C2S},
+};
 use protobuf::MessageField;
 
 const PROTO_ID: u32 = 2102;

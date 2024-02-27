@@ -2,8 +2,10 @@ use crate::frame::{Error, Frame};
 use bytes::{Buf, BytesMut};
 use protobuf::MessageFull;
 use std::io::{self, Cursor};
-use tokio::io::{AsyncReadExt, AsyncWriteExt, BufWriter};
-use tokio::net::TcpStream;
+use tokio::{
+    io::{AsyncReadExt, AsyncWriteExt, BufWriter},
+    net::TcpStream,
+};
 
 pub struct Connection {
     stream: BufWriter<TcpStream>,

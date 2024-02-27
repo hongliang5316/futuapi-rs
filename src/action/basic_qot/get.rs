@@ -1,7 +1,9 @@
 use super::super::common::{BasicQot, Security, SecurityVec};
-use crate::Common::RetType;
-use crate::Frame;
-use crate::Qot_GetBasicQot::{Request, Response, C2S};
+use crate::{
+    Common::RetType,
+    Frame,
+    Qot_GetBasicQot::{Request, Response, C2S},
+};
 use protobuf::MessageField;
 
 const PROTO_ID: u32 = 3004;

@@ -1,8 +1,10 @@
 use super::common::Security;
-use crate::Common::RetType;
-use crate::Frame;
-use crate::Qot_Common::QotMarket;
-use crate::Qot_GetIpoList::{Request, Response, C2S};
+use crate::{
+    Common::RetType,
+    Frame,
+    Qot_Common::QotMarket,
+    Qot_GetIpoList::{Request, Response, C2S},
+};
 use protobuf::MessageField;
 
 const PROTO_ID: u32 = 3217;

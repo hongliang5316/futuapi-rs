@@ -1,8 +1,10 @@
 use super::common::{Order, TrdFilterConditions, TrdHeader};
-use crate::Common::RetType;
-use crate::Frame;
-use crate::Trd_Common::OrderStatus;
-use crate::Trd_GetHistoryOrderList::{Request, Response, C2S};
+use crate::{
+    Common::RetType,
+    Frame,
+    Trd_Common::OrderStatus,
+    Trd_GetHistoryOrderList::{Request, Response, C2S},
+};
 use chrono::Duration;
 use protobuf::MessageField;
 

@@ -1,8 +1,10 @@
 use super::common::{MaxTrdQtys, TrdHeader};
-use crate::Common::RetType;
-use crate::Frame;
-use crate::Trd_Common::{OrderType, TrdSecMarket};
-use crate::Trd_GetMaxTrdQtys::{Request, Response, C2S, S2C};
+use crate::{
+    Common::RetType,
+    Frame,
+    Trd_Common::{OrderType, TrdSecMarket},
+    Trd_GetMaxTrdQtys::{Request, Response, C2S, S2C},
+};
 use protobuf::MessageField;
 
 const PROTO_ID: u32 = 2111;

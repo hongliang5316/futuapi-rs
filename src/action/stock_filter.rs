@@ -1,8 +1,10 @@
 use super::common::Security;
-use crate::Common::RetType;
-use crate::Frame;
-use crate::Qot_Common::QotMarket;
-use crate::Qot_StockFilter::{self, AccumulateField, Request, Response, SortDir, StockField, C2S};
+use crate::{
+    Common::RetType,
+    Frame,
+    Qot_Common::QotMarket,
+    Qot_StockFilter::{self, AccumulateField, Request, Response, SortDir, StockField, C2S},
+};
 use protobuf::{Enum, MessageField};
 
 const PROTO_ID: u32 = 3215;

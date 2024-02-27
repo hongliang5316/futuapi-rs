@@ -1,8 +1,10 @@
 use super::super::common::Security;
-use crate::Common::RetType;
-use crate::Frame;
-use crate::Qot_Common::{PriceReminderFreq, PriceReminderType};
-use crate::Qot_SetPriceReminder::{Request, Response, SetPriceReminderOp, C2S};
+use crate::{
+    Common::RetType,
+    Frame,
+    Qot_Common::{PriceReminderFreq, PriceReminderType},
+    Qot_SetPriceReminder::{Request, Response, SetPriceReminderOp, C2S},
+};
 use protobuf::MessageField;
 
 const PROTO_ID: u32 = 3220;

@@ -1,7 +1,9 @@
-use futuapi_rs::action::common::Security;
-use futuapi_rs::action::security_snapshot::GetSecuritySnapshotRequest;
-use futuapi_rs::Qot_Common::QotMarket;
-use futuapi_rs::{client, Result};
+use futuapi_rs::{
+    action::{common::Security, security_snapshot::GetSecuritySnapshotRequest},
+    client,
+    Qot_Common::QotMarket,
+    Result,
+};
 
 #[tokio::main]
 pub async fn main() -> Result<()> {

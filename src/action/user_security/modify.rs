@@ -1,7 +1,9 @@
-use crate::action::common::{Security, SecurityVec};
-use crate::Common::RetType;
-use crate::Frame;
-use crate::Qot_ModifyUserSecurity::{ModifyUserSecurityOp, Request, Response, C2S};
+use crate::{
+    action::common::{Security, SecurityVec},
+    Common::RetType,
+    Frame,
+    Qot_ModifyUserSecurity::{ModifyUserSecurityOp, Request, Response, C2S},
+};
 use protobuf::MessageField;
 
 const PROTO_ID: u32 = 3214;

@@ -1,7 +1,8 @@
-use futuapi_rs::action::common::TrdHeader;
-use futuapi_rs::action::max_trd_qtys::GetMaxTrdQtysRequest;
-use futuapi_rs::Trd_Common::{OrderType, TrdEnv, TrdMarket, TrdSecMarket};
-use futuapi_rs::{client, Result};
+use futuapi_rs::{
+    action::{common::TrdHeader, max_trd_qtys::GetMaxTrdQtysRequest},
+    client, Result,
+    Trd_Common::{OrderType, TrdEnv, TrdMarket, TrdSecMarket},
+};
 
 #[tokio::main]
 pub async fn main() -> Result<()> {

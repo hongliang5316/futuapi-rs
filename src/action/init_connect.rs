@@ -1,6 +1,8 @@
-use crate::Common::RetType;
-use crate::Frame;
-use crate::InitConnect::{Request, Response, C2S};
+use crate::{
+    Common::RetType,
+    Frame,
+    InitConnect::{Request, Response, C2S},
+};
 use protobuf::MessageField;
 
 const PROTO_ID: u32 = 1001;

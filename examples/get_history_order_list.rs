@@ -1,7 +1,11 @@
-use futuapi_rs::action::common::{TrdFilterConditions, TrdHeader};
-use futuapi_rs::action::history_order_list::GetHistoryOrderListRequest;
-use futuapi_rs::Trd_Common::{OrderStatus, TrdEnv, TrdMarket};
-use futuapi_rs::{client, Result};
+use futuapi_rs::{
+    action::{
+        common::{TrdFilterConditions, TrdHeader},
+        history_order_list::GetHistoryOrderListRequest,
+    },
+    client, Result,
+    Trd_Common::{OrderStatus, TrdEnv, TrdMarket},
+};
 
 #[tokio::main]
 pub async fn main() -> Result<()> {

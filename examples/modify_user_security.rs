@@ -1,6 +1,7 @@
-use futuapi_rs::action::user_security::modify::ModifyUserSecurityRequest;
-use futuapi_rs::Qot_ModifyUserSecurity::ModifyUserSecurityOp;
-use futuapi_rs::{client, Result};
+use futuapi_rs::{
+    action::user_security::modify::ModifyUserSecurityRequest, client,
+    Qot_ModifyUserSecurity::ModifyUserSecurityOp, Result,
+};
 
 #[tokio::main]
 pub async fn main() -> Result<()> {

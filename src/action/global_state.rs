@@ -1,8 +1,10 @@
-use crate::action::common::ProgramStatus;
-use crate::Common::RetType;
-use crate::Frame;
-use crate::GetGlobalState::{Request, Response, C2S};
-use crate::Qot_Common::QotMarketState;
+use crate::{
+    action::common::ProgramStatus,
+    Common::RetType,
+    Frame,
+    GetGlobalState::{Request, Response, C2S},
+    Qot_Common::QotMarketState,
+};
 use protobuf::{Enum, MessageField};
 
 const PROTO_ID: u32 = 1002;

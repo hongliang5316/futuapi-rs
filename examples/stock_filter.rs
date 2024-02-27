@@ -1,7 +1,10 @@
-use futuapi_rs::action::stock_filter::{AccumulateFilter, BaseFilter, GetStockFilterRequest};
-use futuapi_rs::Qot_Common::QotMarket;
-use futuapi_rs::Qot_StockFilter::{AccumulateField, SortDir, StockField};
-use futuapi_rs::{client, Result};
+use futuapi_rs::{
+    action::stock_filter::{AccumulateFilter, BaseFilter, GetStockFilterRequest},
+    client,
+    Qot_Common::QotMarket,
+    Qot_StockFilter::{AccumulateField, SortDir, StockField},
+    Result,
+};
 use std::collections::HashMap;
 
 #[tokio::main]

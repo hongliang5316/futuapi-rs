@@ -1,6 +1,8 @@
-use crate::Common::RetType;
-use crate::Frame;
-use crate::Qot_GetUserSecurityGroup::{GroupType, Request, Response, C2S};
+use crate::{
+    Common::RetType,
+    Frame,
+    Qot_GetUserSecurityGroup::{GroupType, Request, Response, C2S},
+};
 use protobuf::{Enum, MessageField};
 
 const PROTO_ID: u32 = 3222;

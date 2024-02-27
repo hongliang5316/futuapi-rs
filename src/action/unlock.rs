@@ -1,7 +1,9 @@
-use crate::Common::RetType;
-use crate::Frame;
-use crate::Trd_Common::SecurityFirm;
-use crate::Trd_UnlockTrade::{Request, Response, C2S};
+use crate::{
+    Common::RetType,
+    Frame,
+    Trd_Common::SecurityFirm,
+    Trd_UnlockTrade::{Request, Response, C2S},
+};
 use protobuf::MessageField;
 
 const PROTO_ID: u32 = 2005;

@@ -1,9 +1,10 @@
-use futuapi_rs::action::price_reminder::{
-    get::GetPriceReminderRequest, set::SetPriceReminderRequest,
+use futuapi_rs::{
+    action::price_reminder::{get::GetPriceReminderRequest, set::SetPriceReminderRequest},
+    client,
+    Qot_Common::{PriceReminderFreq, PriceReminderType},
+    Qot_SetPriceReminder::SetPriceReminderOp,
+    Result,
 };
-use futuapi_rs::Qot_Common::{PriceReminderFreq, PriceReminderType};
-use futuapi_rs::Qot_SetPriceReminder::SetPriceReminderOp;
-use futuapi_rs::{client, Result};
 
 #[tokio::main]
 pub async fn main() -> Result<()> {
