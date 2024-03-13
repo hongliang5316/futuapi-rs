@@ -3,6 +3,7 @@ use bytes::Buf;
 use crypto::{digest::Digest, sha1::Sha1};
 use protobuf::MessageFull;
 use serde::{Deserialize, Serialize};
+use std::fmt;
 use std::io::Cursor;
 
 const PROTO_HEADER_LEN: usize = 44;
@@ -35,6 +36,7 @@ impl APIProtoHeader {
 pub enum Error {
     Incomplete,
     ProtoError(String),
+    ConnectionError(String),
     Other(String),
 }
 
@@ -42,6 +44,14 @@ pub enum Error {
 pub struct Frame<T: MessageFull> {
     pub header: APIProtoHeader,
     pub body: T,
+}
+
+impl std::error::Error for Error {}
+
+impl fmt::Display for Error {
+    fn fmt(&self, fmt: &mut fmt::Formatter) -> fmt::Result {
+        write!(fmt, "{:?}", self)
+    }
 }
 
 fn sha1(msg: &[u8]) -> [u8; 20] {
@@ -58,7 +68,10 @@ fn get_header(src: &mut Cursor<&[u8]>) -> Result<APIProtoHeader, Error> {
         return Err(Error::Incomplete);
     }
 
-    let decoded = bincode::deserialize(src.get_ref().get(0..PROTO_HEADER_LEN).unwrap()).unwrap();
+    let decoded = match bincode::deserialize(src.get_ref().get(0..PROTO_HEADER_LEN).unwrap()) {
+        Ok(d) => d,
+        Err(e) => return Err(Error::ProtoError(format!("failed to decode header: {}", e))),
+    };
 
     src.advance(PROTO_HEADER_LEN);
 
@@ -71,7 +84,8 @@ fn get_body<T: MessageFull>(src: &mut Cursor<&[u8]>, len: u32) -> Result<T, Erro
         return Err(Error::Incomplete);
     }
 
-    Ok(T::parse_from_bytes(src.copy_to_bytes(len as usize).as_ref()).unwrap())
+    T::parse_from_bytes(src.copy_to_bytes(len as usize).as_ref())
+        .map_err(|e| Error::ProtoError(format!("failed to decode body: {}", e)))
 }
 
 pub fn serial_no() -> u32 {
@@ -101,7 +115,7 @@ impl<T: MessageFull> Frame<T> {
     pub fn parse(src: &mut Cursor<&[u8]>) -> Result<Frame<T>, Error> {
         let header = get_header(src)?;
         if header.proto_fmt_type != 0 {
-            return Err(Error::Other(
+            return Err(Error::ProtoError(
                 "Unsupported protocol format type: json".into(),
             ));
         }

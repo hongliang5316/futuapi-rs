@@ -32,11 +32,16 @@ impl Connection {
                     return Ok(Some(frame));
                 }
                 Err(Error::Incomplete) => {
-                    if 0 == self.stream.read_buf(&mut self.buffer).await.unwrap() {
+                    if 0 == self
+                        .stream
+                        .read_buf(&mut self.buffer)
+                        .await
+                        .map_err(|e| Error::ConnectionError(e.to_string()))?
+                    {
                         if self.buffer.is_empty() {
                             return Ok(None);
                         } else {
-                            return Err(Error::Other("connection reset by peer".into()));
+                            return Err(Error::ConnectionError("connection reset by peer".into()));
                         }
                     }
                 }
@@ -50,7 +55,7 @@ impl Connection {
     pub async fn write_frame<T: MessageFull>(&mut self, frame: &Frame<T>) -> io::Result<()> {
         self.stream.write_all(&frame.header.to_vec()).await?;
         self.stream
-            .write_all(frame.body.write_to_bytes().unwrap().as_ref())
+            .write_all(frame.body.write_to_bytes()?.as_ref())
             .await?;
         self.stream.flush().await
     }

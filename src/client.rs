@@ -42,6 +42,7 @@ use crate::{
         TrdSecMarket, TrdSide,
     },
 };
+use std::io::{Error, ErrorKind};
 use tokio::net::{TcpStream, ToSocketAddrs};
 
 pub struct QotClient {
@@ -54,7 +55,7 @@ pub struct TrdClient {
 }
 
 pub async fn qot_connect<T: ToSocketAddrs>(addr: T) -> crate::Result<QotClient> {
-    let socket = TcpStream::connect(addr).await.unwrap();
+    let socket = TcpStream::connect(addr).await?;
 
     let connection = Connection::new(socket);
 
@@ -65,7 +66,7 @@ pub async fn qot_connect<T: ToSocketAddrs>(addr: T) -> crate::Result<QotClient> 
 }
 
 pub async fn trd_connect<T: ToSocketAddrs>(addr: T) -> crate::Result<TrdClient> {
-    let socket = TcpStream::connect(addr).await.unwrap();
+    let socket = TcpStream::connect(addr).await?;
 
     let connection = Connection::new(socket);
 
@@ -87,9 +88,14 @@ impl TrdClient {
 
     async fn init_connect(&mut self) -> crate::Result<InitConnectResponse> {
         let frame = InitConnectRequest::default().into_frame();
-        self.connection.write_frame(&frame).await.unwrap();
-        let frame: Frame<crate::InitConnect::Response> =
-            self.connection.read_frame().await.unwrap().unwrap();
+        self.connection.write_frame(&frame).await?;
+        let frame: Frame<crate::InitConnect::Response> = match self.connection.read_frame().await? {
+            Some(frame) => frame,
+            None => {
+                let err = Error::new(ErrorKind::ConnectionReset, "connection reset by server");
+                return Err(err.into());
+            }
+        };
         init_connect::check_response(frame.body)
     }
 
@@ -98,9 +104,15 @@ impl TrdClient {
         let unlock_req =
             UnlockRequest::new(pwd_md5, Some(SecurityFirm::SecurityFirm_FutuSecurities));
         let frame = unlock_req.into_frame();
-        self.connection.write_frame(&frame).await.unwrap();
+        self.connection.write_frame(&frame).await?;
         let frame: Frame<crate::Trd_UnlockTrade::Response> =
-            self.connection.read_frame().await.unwrap().unwrap();
+            match self.connection.read_frame().await? {
+                Some(frame) => frame,
+                None => {
+                    let err = Error::new(ErrorKind::ConnectionReset, "connection reset by server");
+                    return Err(err.into());
+                }
+            };
         unlock::check_response(frame.body)
     }
 
@@ -109,9 +121,15 @@ impl TrdClient {
         get_max_trd_qtys_req: GetMaxTrdQtysRequest,
     ) -> crate::Result<GetMaxTrdQtysResponse> {
         let frame = get_max_trd_qtys_req.into_frame();
-        self.connection.write_frame(&frame).await.unwrap();
+        self.connection.write_frame(&frame).await?;
         let frame: Frame<crate::Trd_GetMaxTrdQtys::Response> =
-            self.connection.read_frame().await.unwrap().unwrap();
+            match self.connection.read_frame().await? {
+                Some(frame) => frame,
+                None => {
+                    let err = Error::new(ErrorKind::ConnectionReset, "connection reset by server");
+                    return Err(err.into());
+                }
+            };
         max_trd_qtys::check_response(frame.body)
     }
 
@@ -120,9 +138,15 @@ impl TrdClient {
         get_position_list_req: GetPositionListRequest,
     ) -> crate::Result<GetPositionListResponse> {
         let frame = get_position_list_req.into_frame();
-        self.connection.write_frame(&frame).await.unwrap();
+        self.connection.write_frame(&frame).await?;
         let frame: Frame<crate::Trd_GetPositionList::Response> =
-            self.connection.read_frame().await.unwrap().unwrap();
+            match self.connection.read_frame().await? {
+                Some(frame) => frame,
+                None => {
+                    let err = Error::new(ErrorKind::ConnectionReset, "connection reset by server");
+                    return Err(err.into());
+                }
+            };
         position_list::check_response(frame.body)
     }
 
@@ -131,9 +155,15 @@ impl TrdClient {
         get_history_order_list_req: GetHistoryOrderListRequest,
     ) -> crate::Result<GetHistoryOrderListResponse> {
         let frame = get_history_order_list_req.into_frame();
-        self.connection.write_frame(&frame).await.unwrap();
+        self.connection.write_frame(&frame).await?;
         let frame: Frame<crate::Trd_GetHistoryOrderList::Response> =
-            self.connection.read_frame().await.unwrap().unwrap();
+            match self.connection.read_frame().await? {
+                Some(frame) => frame,
+                None => {
+                    let err = Error::new(ErrorKind::ConnectionReset, "connection reset by server");
+                    return Err(err.into());
+                }
+            };
         history_order_list::check_response(frame.body)
     }
 
@@ -163,9 +193,15 @@ impl TrdClient {
             price,
         );
         let frame = modify_order_req.into_frame();
-        self.connection.write_frame(&frame).await.unwrap();
+        self.connection.write_frame(&frame).await?;
         let frame: Frame<crate::Trd_ModifyOrder::Response> =
-            self.connection.read_frame().await.unwrap().unwrap();
+            match self.connection.read_frame().await? {
+                Some(frame) => frame,
+                None => {
+                    let err = Error::new(ErrorKind::ConnectionReset, "connection reset by server");
+                    return Err(err.into());
+                }
+            };
         order::modify::check_response(frame.body)
     }
 
@@ -220,9 +256,15 @@ impl TrdClient {
         place_order_req.trail_spread = trail_spread;
 
         let frame = place_order_req.into_frame();
-        self.connection.write_frame(&frame).await.unwrap();
+        self.connection.write_frame(&frame).await?;
         let frame: Frame<crate::Trd_PlaceOrder::Response> =
-            self.connection.read_frame().await.unwrap().unwrap();
+            match self.connection.read_frame().await? {
+                Some(frame) => frame,
+                None => {
+                    let err = Error::new(ErrorKind::ConnectionReset, "connection reset by server");
+                    return Err(err.into());
+                }
+            };
         order::place::check_response(frame.body)
     }
 }
@@ -230,9 +272,14 @@ impl TrdClient {
 impl QotClient {
     async fn init_connect(&mut self) -> crate::Result<InitConnectResponse> {
         let frame = InitConnectRequest::default().into_frame();
-        self.connection.write_frame(&frame).await.unwrap();
-        let frame: Frame<crate::InitConnect::Response> =
-            self.connection.read_frame().await.unwrap().unwrap();
+        self.connection.write_frame(&frame).await?;
+        let frame: Frame<crate::InitConnect::Response> = match self.connection.read_frame().await? {
+            Some(frame) => frame,
+            None => {
+                let err = Error::new(ErrorKind::ConnectionReset, "connection reset by server");
+                return Err(err.into());
+            }
+        };
         init_connect::check_response(frame.body)
     }
 
@@ -241,9 +288,15 @@ impl QotClient {
         get_ipo_list_req: GetIpoListRequest,
     ) -> crate::Result<GetIpoListResponse> {
         let frame = get_ipo_list_req.into_frame();
-        self.connection.write_frame(&frame).await.unwrap();
+        self.connection.write_frame(&frame).await?;
         let frame: Frame<crate::Qot_GetIpoList::Response> =
-            self.connection.read_frame().await.unwrap().unwrap();
+            match self.connection.read_frame().await? {
+                Some(frame) => frame,
+                None => {
+                    let err = Error::new(ErrorKind::ConnectionReset, "connection reset by server");
+                    return Err(err.into());
+                }
+            };
         ipo::check_response(frame.body)
     }
 
@@ -252,9 +305,15 @@ impl QotClient {
         get_security_snapshot_req: GetSecuritySnapshotRequest,
     ) -> crate::Result<GetSecuritySnapshotResponse> {
         let frame = get_security_snapshot_req.into_frame();
-        self.connection.write_frame(&frame).await.unwrap();
+        self.connection.write_frame(&frame).await?;
         let frame: Frame<crate::Qot_GetSecuritySnapshot::Response> =
-            self.connection.read_frame().await.unwrap().unwrap();
+            match self.connection.read_frame().await? {
+                Some(frame) => frame,
+                None => {
+                    let err = Error::new(ErrorKind::ConnectionReset, "connection reset by server");
+                    return Err(err.into());
+                }
+            };
         security_snapshot::check_response(frame.body)
     }
 
@@ -263,9 +322,15 @@ impl QotClient {
         get_user_security_group_req: GetUserSecurityGroupRequest,
     ) -> crate::Result<GetUserSecurityGroupResponse> {
         let frame = get_user_security_group_req.into_frame();
-        self.connection.write_frame(&frame).await.unwrap();
+        self.connection.write_frame(&frame).await?;
         let frame: Frame<crate::Qot_GetUserSecurityGroup::Response> =
-            self.connection.read_frame().await.unwrap().unwrap();
+            match self.connection.read_frame().await? {
+                Some(frame) => frame,
+                None => {
+                    let err = Error::new(ErrorKind::ConnectionReset, "connection reset by server");
+                    return Err(err.into());
+                }
+            };
         user_security_group::get::check_response(frame.body)
     }
 
@@ -274,9 +339,15 @@ impl QotClient {
         get_user_security_req: GetUserSecurityRequest,
     ) -> crate::Result<GetUserSecurityResponse> {
         let frame = get_user_security_req.into_frame();
-        self.connection.write_frame(&frame).await.unwrap();
+        self.connection.write_frame(&frame).await?;
         let frame: Frame<crate::Qot_GetUserSecurity::Response> =
-            self.connection.read_frame().await.unwrap().unwrap();
+            match self.connection.read_frame().await? {
+                Some(frame) => frame,
+                None => {
+                    let err = Error::new(ErrorKind::ConnectionReset, "connection reset by server");
+                    return Err(err.into());
+                }
+            };
         user_security::get::check_response(frame.body)
     }
 
@@ -285,9 +356,15 @@ impl QotClient {
         modify_user_security_req: ModifyUserSecurityRequest,
     ) -> crate::Result<()> {
         let frame = modify_user_security_req.into_frame();
-        self.connection.write_frame(&frame).await.unwrap();
+        self.connection.write_frame(&frame).await?;
         let frame: Frame<crate::Qot_ModifyUserSecurity::Response> =
-            self.connection.read_frame().await.unwrap().unwrap();
+            match self.connection.read_frame().await? {
+                Some(frame) => frame,
+                None => {
+                    let err = Error::new(ErrorKind::ConnectionReset, "connection reset by server");
+                    return Err(err.into());
+                }
+            };
         user_security::modify::check_response(frame.body)
     }
 
@@ -296,17 +373,29 @@ impl QotClient {
         get_plate_security_req: GetPlateSecurityRequest,
     ) -> crate::Result<GetPlateSecurityResponse> {
         let frame = get_plate_security_req.into_frame();
-        self.connection.write_frame(&frame).await.unwrap();
+        self.connection.write_frame(&frame).await?;
         let frame: Frame<crate::Qot_GetPlateSecurity::Response> =
-            self.connection.read_frame().await.unwrap().unwrap();
+            match self.connection.read_frame().await? {
+                Some(frame) => frame,
+                None => {
+                    let err = Error::new(ErrorKind::ConnectionReset, "connection reset by server");
+                    return Err(err.into());
+                }
+            };
         plate_security::check_response(frame.body)
     }
 
     pub async fn get_global_state(&mut self) -> crate::Result<GetGlobalStateResponse> {
         let frame = GetGlobalStateRequest.into_frame();
-        self.connection.write_frame(&frame).await.unwrap();
+        self.connection.write_frame(&frame).await?;
         let frame: Frame<crate::GetGlobalState::Response> =
-            self.connection.read_frame().await.unwrap().unwrap();
+            match self.connection.read_frame().await? {
+                Some(frame) => frame,
+                None => {
+                    let err = Error::new(ErrorKind::ConnectionReset, "connection reset by server");
+                    return Err(err.into());
+                }
+            };
         global_state::check_response(frame.body)
     }
 
@@ -315,17 +404,28 @@ impl QotClient {
         get_stock_filter_req: GetStockFilterRequest,
     ) -> crate::Result<GetStockFilterResponse> {
         let frame = get_stock_filter_req.into_frame();
-        self.connection.write_frame(&frame).await.unwrap();
+        self.connection.write_frame(&frame).await?;
         let frame: Frame<crate::Qot_StockFilter::Response> =
-            self.connection.read_frame().await.unwrap().unwrap();
+            match self.connection.read_frame().await? {
+                Some(frame) => frame,
+                None => {
+                    let err = Error::new(ErrorKind::ConnectionReset, "connection reset by server");
+                    return Err(err.into());
+                }
+            };
         stock_filter::check_response(frame.body)
     }
 
     pub async fn subscribe(&mut self, subscribe_req: SubscribeRequest) -> crate::Result<()> {
         let frame = subscribe_req.into_frame();
-        self.connection.write_frame(&frame).await.unwrap();
-        let frame: Frame<crate::Qot_Sub::Response> =
-            self.connection.read_frame().await.unwrap().unwrap();
+        self.connection.write_frame(&frame).await?;
+        let frame: Frame<crate::Qot_Sub::Response> = match self.connection.read_frame().await? {
+            Some(frame) => frame,
+            None => {
+                let err = Error::new(ErrorKind::ConnectionReset, "connection reset by server");
+                return Err(err.into());
+            }
+        };
         subscribe::check_response(frame.body)
     }
 
@@ -349,9 +449,15 @@ impl QotClient {
         get_basic_qot_req: GetBasicQotRequest,
     ) -> crate::Result<GetBasicQotResponse> {
         let frame = get_basic_qot_req.into_frame();
-        self.connection.write_frame(&frame).await.unwrap();
+        self.connection.write_frame(&frame).await?;
         let frame: Frame<crate::Qot_GetBasicQot::Response> =
-            self.connection.read_frame().await.unwrap().unwrap();
+            match self.connection.read_frame().await? {
+                Some(frame) => frame,
+                None => {
+                    let err = Error::new(ErrorKind::ConnectionReset, "connection reset by server");
+                    return Err(err.into());
+                }
+            };
         basic_qot::get::check_response(frame.body)
     }
 
@@ -360,9 +466,15 @@ impl QotClient {
         set_price_reminder_req: SetPriceReminderRequest,
     ) -> crate::Result<SetPriceReminderResponse> {
         let frame = set_price_reminder_req.into_frame();
-        self.connection.write_frame(&frame).await.unwrap();
+        self.connection.write_frame(&frame).await?;
         let frame: Frame<crate::Qot_SetPriceReminder::Response> =
-            self.connection.read_frame().await.unwrap().unwrap();
+            match self.connection.read_frame().await? {
+                Some(frame) => frame,
+                None => {
+                    let err = Error::new(ErrorKind::ConnectionReset, "connection reset by server");
+                    return Err(err.into());
+                }
+            };
         price_reminder::set::check_response(frame.body)
     }
 
@@ -371,9 +483,15 @@ impl QotClient {
         get_price_reminder_req: GetPriceReminderRequest,
     ) -> crate::Result<GetPriceReminderResponse> {
         let frame = get_price_reminder_req.into_frame();
-        self.connection.write_frame(&frame).await.unwrap();
+        self.connection.write_frame(&frame).await?;
         let frame: Frame<crate::Qot_GetPriceReminder::Response> =
-            self.connection.read_frame().await.unwrap().unwrap();
+            match self.connection.read_frame().await? {
+                Some(frame) => frame,
+                None => {
+                    let err = Error::new(ErrorKind::ConnectionReset, "connection reset by server");
+                    return Err(err.into());
+                }
+            };
         price_reminder::get::check_response(frame.body)
     }
 }
