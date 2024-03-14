@@ -26,6 +26,9 @@ fn main() {
             "proto/Trd_GetPositionList.proto",
             "proto/Trd_GetHistoryOrderList.proto",
             "proto/Trd_ModifyOrder.proto",
+            "proto/KeepAlive.proto",
+            "proto/Qot_UpdateRT.proto",
+            "proto/Qot_UpdateKL.proto",
         ])
         .cargo_out_dir("rust_protobuf_protos")
         .run_from_script();

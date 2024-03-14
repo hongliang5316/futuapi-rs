@@ -51,13 +51,13 @@ impl Default for InitConnectRequest {
 
 #[derive(Debug)]
 pub struct InitConnectResponse {
-    server_ver: i32,
-    login_user_id: u64,
+    pub server_ver: i32,
+    pub login_user_id: u64,
     pub conn_id: u64,
-    conn_aes_key: String,
-    keep_alive_interval: i32,
-    aes_cbc_iv: String,
-    user_attribution: i32,
+    pub conn_aes_key: String,
+    pub keep_alive_interval: i32,
+    pub aes_cbc_iv: String,
+    pub user_attribution: i32,
 }
 
 impl From<Response> for InitConnectResponse {

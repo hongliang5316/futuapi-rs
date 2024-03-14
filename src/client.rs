@@ -3,12 +3,15 @@ use crate::{
         basic_qot::{
             self,
             get::{GetBasicQotRequest, GetBasicQotResponse},
+            update::UpdateBasicQotResponse,
         },
         common::{PacketID, TrdHeader},
         global_state::{self, GetGlobalStateRequest, GetGlobalStateResponse},
         history_order_list::{self, GetHistoryOrderListRequest, GetHistoryOrderListResponse},
         init_connect::{self, InitConnectRequest, InitConnectResponse},
         ipo::{self, GetIpoListRequest, GetIpoListResponse},
+        keepalive::KeepAliveRequest,
+        kl::{self, update::UpdateKLResponse},
         max_trd_qtys::{self, GetMaxTrdQtysRequest, GetMaxTrdQtysResponse},
         order::{
             self,
@@ -22,6 +25,7 @@ use crate::{
             get::{GetPriceReminderRequest, GetPriceReminderResponse},
             set::{SetPriceReminderRequest, SetPriceReminderResponse},
         },
+        rt::{self, update::UpdateRTResponse},
         security_snapshot::{self, GetSecuritySnapshotRequest, GetSecuritySnapshotResponse},
         stock_filter::{self, GetStockFilterRequest, GetStockFilterResponse},
         subscribe::{self, SubscribeRequest},
@@ -42,8 +46,16 @@ use crate::{
         TrdSecMarket, TrdSide,
     },
 };
-use std::io::{Error, ErrorKind};
-use tokio::net::{TcpStream, ToSocketAddrs};
+use std::{
+    io::{Error, ErrorKind},
+    sync::Arc,
+};
+use tokio::{
+    net::{TcpStream, ToSocketAddrs},
+    sync::Mutex,
+    task::JoinHandle,
+    time::{sleep, Duration},
+};
 
 pub struct QotClient {
     connection: Connection,
@@ -54,9 +66,14 @@ pub struct TrdClient {
     connection: Connection,
 }
 
+pub struct SubClient {
+    keep_alive_interval: i32,
+    connection: Arc<Mutex<Connection>>,
+    handle: Option<JoinHandle<()>>,
+}
+
 pub async fn qot_connect<T: ToSocketAddrs>(addr: T) -> crate::Result<QotClient> {
     let socket = TcpStream::connect(addr).await?;
-
     let connection = Connection::new(socket);
 
     let mut client = QotClient { connection };
@@ -65,9 +82,35 @@ pub async fn qot_connect<T: ToSocketAddrs>(addr: T) -> crate::Result<QotClient> 
     Ok(client)
 }
 
+pub async fn sub_connect<T: ToSocketAddrs>(addr: T) -> crate::Result<SubClient> {
+    let socket = TcpStream::connect(addr).await?;
+    let connection = Connection::new(socket);
+
+    let mut client = SubClient {
+        keep_alive_interval: 0,
+        connection: Arc::new(Mutex::new(connection)),
+        handle: None,
+    };
+    let init_connect_resp = client.init_connect().await?;
+    client.keep_alive_interval = init_connect_resp.keep_alive_interval;
+
+    let conn = client.connection.clone();
+    let handle: tokio::task::JoinHandle<_> = tokio::spawn(async move {
+        loop {
+            sleep(Duration::from_secs(client.keep_alive_interval as u64)).await;
+            let keepalive_ret = SubClient::keepalive(&conn).await;
+            if let Err(e) = keepalive_ret {
+                println!("keepalive error: {:?}", e);
+            }
+        }
+    });
+    client.handle = Some(handle);
+
+    Ok(client)
+}
+
 pub async fn trd_connect<T: ToSocketAddrs>(addr: T) -> crate::Result<TrdClient> {
     let socket = TcpStream::connect(addr).await?;
-
     let connection = Connection::new(socket);
 
     let mut client = TrdClient {
@@ -269,6 +312,87 @@ impl TrdClient {
     }
 }
 
+impl SubClient {
+    async fn init_connect(&mut self) -> crate::Result<InitConnectResponse> {
+        let frame = InitConnectRequest::default().into_frame();
+        let mut connection = self.connection.lock().await;
+        connection.write_frame(&frame).await?;
+        let frame: Frame<crate::InitConnect::Response> = match connection.read_frame().await? {
+            Some(frame) => frame,
+            None => {
+                let err = Error::new(ErrorKind::ConnectionReset, "connection reset by server");
+                return Err(err.into());
+            }
+        };
+        init_connect::check_response(frame.body)
+    }
+
+    pub async fn keepalive(conn: &Arc<Mutex<Connection>>) -> crate::Result<()> {
+        let frame = KeepAliveRequest::new(chrono::Local::now().timestamp()).into_frame();
+        let mut connection = conn.lock().await;
+        connection.write_frame(&frame).await?;
+        Ok(())
+        // let frame: Frame<crate::KeepAlive::Response> = match connection.read_frame().await? {
+        //     Some(frame) => frame,
+        //     None => {
+        //         let err = Error::new(ErrorKind::ConnectionReset, "connection reset by server");
+        //         return Err(err.into());
+        //     }
+        // };
+        // keepalive::check_response(frame.body)
+    }
+
+    pub async fn subscribe(self, subscribe_req: SubscribeRequest) -> crate::Result<Subscriber> {
+        let frame = subscribe_req.into_frame();
+        let mut connection = self.connection.lock().await;
+        connection.write_frame(&frame).await?;
+        let frame: Frame<crate::Qot_Sub::Response> = match connection.read_frame().await? {
+            Some(frame) => frame,
+            None => {
+                let err = Error::new(ErrorKind::ConnectionReset, "connection reset by server");
+                return Err(err.into());
+            }
+        };
+        subscribe::check_response(frame.body)?;
+        drop(connection);
+        Ok(Subscriber { client: self })
+    }
+
+    pub async fn unsubscribe_all(&mut self) -> crate::Result<()> {
+        let subscribe_req = SubscribeRequest::new(
+            vec![],
+            vec![],
+            false,
+            None,
+            vec![],
+            None,
+            Some(true),
+            None,
+            None,
+        );
+
+        let frame = subscribe_req.into_frame();
+        let mut connection = self.connection.lock().await;
+        connection.write_frame(&frame).await?;
+        let frame: Frame<crate::Qot_Sub::Response> = match connection.read_frame().await? {
+            Some(frame) => frame,
+            None => {
+                let err = Error::new(ErrorKind::ConnectionReset, "connection reset by server");
+                return Err(err.into());
+            }
+        };
+        subscribe::check_response(frame.body)
+    }
+}
+
+impl Drop for SubClient {
+    fn drop(&mut self) {
+        if let Some(handle) = self.handle.take() {
+            handle.abort();
+        }
+    }
+}
+
 impl QotClient {
     async fn init_connect(&mut self) -> crate::Result<InitConnectResponse> {
         let frame = InitConnectRequest::default().into_frame();
@@ -416,34 +540,6 @@ impl QotClient {
         stock_filter::check_response(frame.body)
     }
 
-    pub async fn subscribe(&mut self, subscribe_req: SubscribeRequest) -> crate::Result<()> {
-        let frame = subscribe_req.into_frame();
-        self.connection.write_frame(&frame).await?;
-        let frame: Frame<crate::Qot_Sub::Response> = match self.connection.read_frame().await? {
-            Some(frame) => frame,
-            None => {
-                let err = Error::new(ErrorKind::ConnectionReset, "connection reset by server");
-                return Err(err.into());
-            }
-        };
-        subscribe::check_response(frame.body)
-    }
-
-    pub async fn unsubscribe_all(&mut self) -> crate::Result<()> {
-        self.subscribe(SubscribeRequest::new(
-            vec![],
-            vec![],
-            false,
-            None,
-            vec![],
-            None,
-            Some(true),
-            None,
-            None,
-        ))
-        .await
-    }
-
     pub async fn get_basic_qot(
         &mut self,
         get_basic_qot_req: GetBasicQotRequest,
@@ -493,5 +589,47 @@ impl QotClient {
                 }
             };
         price_reminder::get::check_response(frame.body)
+    }
+}
+
+pub struct Subscriber {
+    client: SubClient,
+}
+
+#[derive(Debug)]
+pub enum UpdateResponse {
+    BasicQot(UpdateBasicQotResponse),
+    RT(UpdateRTResponse),
+    KL(UpdateKLResponse),
+}
+
+impl Subscriber {
+    pub async fn next_data(&mut self) -> crate::Result<Option<UpdateResponse>> {
+        let mut connection = self.client.connection.lock().await;
+        match connection.read_frame_raw().await? {
+            Some(frame_raw) => match frame_raw.header.proto_id {
+                basic_qot::update::PROTO_ID => {
+                    let frame: Frame<crate::Qot_UpdateBasicQot::Response> =
+                        Frame::from_raw(frame_raw)?;
+                    let resp = basic_qot::update::check_response(frame.body)?;
+                    Ok(Some(UpdateResponse::BasicQot(resp)))
+                }
+                rt::update::PROTO_ID => {
+                    let frame: Frame<crate::Qot_UpdateRT::Response> = Frame::from_raw(frame_raw)?;
+                    let resp = rt::update::check_response(frame.body)?;
+                    Ok(Some(UpdateResponse::RT(resp)))
+                }
+                kl::update::PROTO_ID => {
+                    let frame: Frame<crate::Qot_UpdateKL::Response> = Frame::from_raw(frame_raw)?;
+                    let resp = kl::update::check_response(frame.body)?;
+                    Ok(Some(UpdateResponse::KL(resp)))
+                }
+                _ => {
+                    // ignore other response
+                    return Ok(None);
+                }
+            },
+            None => Ok(None),
+        }
     }
 }

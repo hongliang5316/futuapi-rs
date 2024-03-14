@@ -1,29 +1,30 @@
-use atomic_counter::{AtomicCounter, ConsistentCounter};
 use bytes::Buf;
 use crypto::{digest::Digest, sha1::Sha1};
 use protobuf::MessageFull;
 use serde::{Deserialize, Serialize};
-use std::fmt;
-use std::io::Cursor;
+use std::{
+    fmt,
+    io::Cursor,
+    sync::{Arc, Mutex},
+};
 
 const PROTO_HEADER_LEN: usize = 44;
 const HEADER_FLAG: [u8; 2] = [70, 84]; // "FT"
 
 lazy_static! {
-    /// This is an example for using doc comment attributes
-    static ref SERIAL_NO: ConsistentCounter = ConsistentCounter::new(0);
+    static ref SERIAL_NO: Arc<Mutex<u32>> = Arc::new(Mutex::new(0));
 }
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct APIProtoHeader {
-    header_flag: [u8; 2],
-    proto_id: u32,
-    proto_fmt_type: u8,
-    proto_ver: u8,
-    serial_no: u32,
-    body_len: u32,
-    body_sha1: [u8; 20],
-    reserved: [u8; 8],
+    pub header_flag: [u8; 2],
+    pub proto_id: u32,
+    pub proto_fmt_type: u8,
+    pub proto_ver: u8,
+    pub serial_no: u32,
+    pub body_len: u32,
+    pub body_sha1: [u8; 20],
+    pub reserved: [u8; 8],
 }
 
 impl APIProtoHeader {
@@ -37,6 +38,7 @@ pub enum Error {
     Incomplete,
     ProtoError(String),
     ConnectionError(String),
+    Timeout(String),
     Other(String),
 }
 
@@ -44,6 +46,12 @@ pub enum Error {
 pub struct Frame<T: MessageFull> {
     pub header: APIProtoHeader,
     pub body: T,
+}
+
+#[derive(Debug)]
+pub struct FrameRaw {
+    pub header: APIProtoHeader,
+    pub body: Vec<u8>,
 }
 
 impl std::error::Error for Error {}
@@ -88,12 +96,39 @@ fn get_body<T: MessageFull>(src: &mut Cursor<&[u8]>, len: u32) -> Result<T, Erro
         .map_err(|e| Error::ProtoError(format!("failed to decode body: {}", e)))
 }
 
+fn get_body_raw(src: &mut Cursor<&[u8]>, len: u32) -> Result<Vec<u8>, Error> {
+    let remaining = src.remaining() as u32;
+    if remaining < len {
+        return Err(Error::Incomplete);
+    }
+
+    Ok(src.copy_to_bytes(len as usize).to_vec())
+}
+
 pub fn serial_no() -> u32 {
-    SERIAL_NO.inc();
-    SERIAL_NO.get() as u32
+    let mut n = SERIAL_NO.lock().unwrap();
+    *n += 1;
+    *n
+}
+
+impl FrameRaw {
+    pub fn parse(src: &mut Cursor<&[u8]>) -> Result<FrameRaw, Error> {
+        let header = get_header(src)?;
+        let body = get_body_raw(src, header.body_len)?;
+
+        Ok(FrameRaw { header, body })
+    }
 }
 
 impl<T: MessageFull> Frame<T> {
+    pub fn from_raw(frame_raw: FrameRaw) -> Result<Frame<T>, Error> {
+        Ok(Frame {
+            header: frame_raw.header,
+            body: T::parse_from_bytes(&frame_raw.body)
+                .map_err(|e| Error::ProtoError(format!("failed to decode body: {}", e)))?,
+        })
+    }
+
     pub fn new(body: T, proto_id: u32) -> Frame<T> {
         let b = body.write_to_bytes().unwrap();
 

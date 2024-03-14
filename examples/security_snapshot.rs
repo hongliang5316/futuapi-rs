@@ -12,7 +12,7 @@ pub async fn main() -> Result<()> {
     let get_security_snapshot_resp = qot_client
         .get_security_snapshot(GetSecuritySnapshotRequest::new(vec![Security {
             market: QotMarket::QotMarket_US_Security,
-            code: "CEI".into(),
+            code: "AAPL".into(),
         }]))
         .await?;
 

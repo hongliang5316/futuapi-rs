@@ -330,28 +330,94 @@ impl From<Common::ProgramStatus> for ProgramStatus {
 }
 
 #[derive(Debug)]
+pub struct KLine {
+    pub time: String,
+    pub is_blank: bool,
+    pub high_price: Option<f64>,
+    pub open_price: Option<f64>,
+    pub low_price: Option<f64>,
+    pub close_price: Option<f64>,
+    pub last_close_price: Option<f64>,
+    pub volume: Option<i64>,
+    pub turnover: Option<f64>,
+    pub turnover_rate: Option<f64>,
+    pub pe: Option<f64>,
+    pub change_rate: Option<f64>,
+    pub timestamp: Option<f64>,
+}
+
+impl From<Qot_Common::KLine> for KLine {
+    fn from(kline: Qot_Common::KLine) -> Self {
+        KLine {
+            time: kline.time().into(),
+            is_blank: kline.isBlank(),
+            high_price: kline.highPrice,
+            open_price: kline.openPrice,
+            low_price: kline.lowPrice,
+            close_price: kline.closePrice,
+            last_close_price: kline.lastClosePrice,
+            volume: kline.volume,
+            turnover: kline.turnover,
+            turnover_rate: kline.turnoverRate,
+            pe: kline.pe,
+            change_rate: kline.changeRate,
+            timestamp: kline.timestamp,
+        }
+    }
+}
+
+#[derive(Debug)]
+pub struct TimeShare {
+    pub time: String,
+    pub minute: i32,
+    pub is_blank: bool,
+    pub price: Option<f64>,
+    pub last_close_price: Option<f64>,
+    pub avg_price: Option<f64>,
+    pub volume: Option<i64>,
+    pub turnover: Option<f64>,
+    pub timestamp: Option<f64>,
+}
+
+impl From<Qot_Common::TimeShare> for TimeShare {
+    fn from(time_share: Qot_Common::TimeShare) -> Self {
+        TimeShare {
+            time: time_share.time().into(),
+            minute: time_share.minute(),
+            is_blank: time_share.isBlank(),
+            price: time_share.price,
+            last_close_price: time_share.lastClosePrice,
+            avg_price: time_share.avgPrice,
+            volume: time_share.volume,
+            turnover: time_share.turnover,
+            timestamp: time_share.timestamp,
+        }
+    }
+}
+
+#[derive(Debug)]
 pub struct BasicQot {
-    security: Security,
-    is_suspended: bool,
-    list_time: String,
-    price_spread: f64,
-    update_time: String,
-    high_price: f64,
-    open_price: f64,
-    low_price: f64,
-    cur_price: f64,
-    last_close_price: f64,
-    volume: i64,
-    turnover: f64,
-    turnover_rate: f64,
-    amplitude: f64,
-    dark_status: Option<DarkStatus>,
+    pub security: Security,
+    pub is_suspended: bool,
+    pub list_time: String,
+    pub price_spread: f64,
+    pub update_time: String,
+    pub high_price: f64,
+    pub open_price: f64,
+    pub low_price: f64,
+    pub cur_price: f64,
+    pub last_close_price: f64,
+    pub volume: i64,
+    pub turnover: f64,
+    pub turnover_rate: f64,
+    pub amplitude: f64,
+    pub dark_status: Option<DarkStatus>,
     // TODO: option_ex_data: Option<OptionBasicQotExData>,
-    list_timestamp: Option<f64>,
-    update_timestamp: Option<f64>,
-    pre_market: Option<PreAfterMarketData>,
-    after_market: Option<PreAfterMarketData>,
-    sec_status: Option<SecurityStatus>,
+    pub list_timestamp: Option<f64>,
+    pub update_timestamp: Option<f64>,
+    pub pre_market: Option<PreAfterMarketData>,
+    pub after_market: Option<PreAfterMarketData>,
+    pub sec_status: Option<SecurityStatus>,
     // TODO: future_ex_data: Option<FutureBasicQotExData>,
 }
 

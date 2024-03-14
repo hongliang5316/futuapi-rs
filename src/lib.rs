@@ -9,6 +9,7 @@ include!(concat!(env!("OUT_DIR"), "/rust_protobuf_protos/mod.rs"));
 
 pub mod action;
 pub mod client;
+pub use client::UpdateResponse;
 pub mod connection;
 pub use connection::Connection;
 pub mod frame;
