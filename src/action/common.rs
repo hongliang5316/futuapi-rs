@@ -217,6 +217,8 @@ impl PartialEq for Security {
     }
 }
 
+impl Eq for Security {}
+
 fn get_qot_market(market: &str) -> QotMarket {
     match market {
         "HK" => QotMarket::QotMarket_HK_Security,
