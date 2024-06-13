@@ -219,6 +219,13 @@ impl PartialEq for Security {
 
 impl Eq for Security {}
 
+impl std::hash::Hash for Security {
+    fn hash<H: std::hash::Hasher>(&self, state: &mut H) {
+        self.market.hash(state);
+        self.code.hash(state);
+    }
+}
+
 fn get_qot_market(market: &str) -> QotMarket {
     match market {
         "HK" => QotMarket::QotMarket_HK_Security,
