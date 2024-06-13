@@ -211,6 +211,12 @@ pub struct Security {
     pub code: String,
 }
 
+impl PartialEq for Security {
+    fn eq(&self, other: &Self) -> bool {
+        self.market == other.market && self.code == other.code
+    }
+}
+
 fn get_qot_market(market: &str) -> QotMarket {
     match market {
         "HK" => QotMarket::QotMarket_HK_Security,
