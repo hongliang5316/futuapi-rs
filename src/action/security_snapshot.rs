@@ -76,6 +76,52 @@ pub struct SnapshotBasicData {
     pub close_price_5_minute: Option<f64>,
 }
 
+/// Fundamental data returned for equity snapshots.
+///
+/// This data is only present when the requested security is an equity.
+#[derive(Debug)]
+pub struct EquitySnapshotExData {
+    pub issued_shares: i64,
+    pub issued_market_value: f64,
+    pub net_asset: f64,
+    pub net_profit: f64,
+    pub earnings_per_share: f64,
+    pub outstanding_shares: i64,
+    pub outstanding_market_value: f64,
+    pub net_asset_per_share: f64,
+    pub earnings_yield: f64,
+    pub pe_ratio: f64,
+    pub pb_ratio: f64,
+    pub pe_ttm_ratio: f64,
+    pub dividend_ttm: Option<f64>,
+    pub dividend_ratio_ttm: Option<f64>,
+    pub dividend_lfy: Option<f64>,
+    pub dividend_ratio_lfy: Option<f64>,
+}
+
+impl From<Qot_GetSecuritySnapshot::EquitySnapshotExData> for EquitySnapshotExData {
+    fn from(equity_data: Qot_GetSecuritySnapshot::EquitySnapshotExData) -> Self {
+        EquitySnapshotExData {
+            issued_shares: equity_data.issuedShares(),
+            issued_market_value: equity_data.issuedMarketVal(),
+            net_asset: equity_data.netAsset(),
+            net_profit: equity_data.netProfit(),
+            earnings_per_share: equity_data.earningsPershare(),
+            outstanding_shares: equity_data.outstandingShares(),
+            outstanding_market_value: equity_data.outstandingMarketVal(),
+            net_asset_per_share: equity_data.netAssetPershare(),
+            earnings_yield: equity_data.eyRate(),
+            pe_ratio: equity_data.peRate(),
+            pb_ratio: equity_data.pbRate(),
+            pe_ttm_ratio: equity_data.peTTMRate(),
+            dividend_ttm: equity_data.dividendTTM,
+            dividend_ratio_ttm: equity_data.dividendRatioTTM,
+            dividend_lfy: equity_data.dividendLFY,
+            dividend_ratio_lfy: equity_data.dividendLFYRatio,
+        }
+    }
+}
+
 impl From<Qot_GetSecuritySnapshot::SnapshotBasicData> for SnapshotBasicData {
     fn from(snapshot_basic_data: Qot_GetSecuritySnapshot::SnapshotBasicData) -> Self {
         SnapshotBasicData {
@@ -134,6 +180,7 @@ impl From<Qot_GetSecuritySnapshot::SnapshotBasicData> for SnapshotBasicData {
 #[derive(Debug)]
 pub struct Snapshot {
     pub basic: SnapshotBasicData,
+    pub equity_ex_data: Option<EquitySnapshotExData>,
 }
 
 #[derive(Debug)]
@@ -147,6 +194,10 @@ impl From<Response> for GetSecuritySnapshotResponse {
         for snapshot in &resp.s2c.snapshotList {
             snapshot_list.push(Snapshot {
                 basic: snapshot.basic.to_owned().unwrap().into(),
+                equity_ex_data: snapshot
+                    .equityExData
+                    .as_ref()
+                    .map(|equity_data| equity_data.clone().into()),
             });
         }
 
@@ -160,4 +211,38 @@ pub fn check_response(resp: Response) -> crate::Result<GetSecuritySnapshotRespon
     }
 
     Err(resp.retMsg().into())
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn converts_equity_snapshot_fields() {
+        let mut proto = Qot_GetSecuritySnapshot::EquitySnapshotExData::new();
+        proto.set_issuedShares(1_000);
+        proto.set_issuedMarketVal(25_000.0);
+        proto.set_netAsset(12_000.0);
+        proto.set_netProfit(2_000.0);
+        proto.set_earningsPershare(2.0);
+        proto.set_outstandingShares(800);
+        proto.set_outstandingMarketVal(20_000.0);
+        proto.set_netAssetPershare(12.0);
+        proto.set_eyRate(8.0);
+        proto.set_peRate(12.5);
+        proto.set_pbRate(2.1);
+        proto.set_peTTMRate(13.0);
+        proto.dividendTTM = Some(0.5);
+        proto.dividendRatioTTM = Some(2.0);
+        proto.dividendLFY = Some(0.4);
+        proto.dividendLFYRatio = Some(1.8);
+
+        let equity: EquitySnapshotExData = proto.into();
+
+        assert_eq!(equity.issued_shares, 1_000);
+        assert_eq!(equity.outstanding_shares, 800);
+        assert_eq!(equity.pe_ttm_ratio, 13.0);
+        assert_eq!(equity.dividend_ttm, Some(0.5));
+        assert_eq!(equity.dividend_ratio_lfy, Some(1.8));
+    }
 }

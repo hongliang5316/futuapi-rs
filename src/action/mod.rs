@@ -11,6 +11,7 @@ pub mod order;
 pub mod plate_security;
 pub mod position_list;
 pub mod price_reminder;
+pub mod request_history_kl;
 pub mod rt;
 pub mod security_snapshot;
 pub mod stock_filter;

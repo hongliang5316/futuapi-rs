@@ -16,6 +16,7 @@ fn main() {
             "proto/Qot_Sub.proto",
             "proto/Qot_GetBasicQot.proto",
             "proto/Qot_UpdateBasicQot.proto",
+            "proto/Qot_RequestHistoryKL.proto",
             "proto/GetGlobalState.proto",
             "proto/Qot_GetPriceReminder.proto",
             "proto/Qot_SetPriceReminder.proto",

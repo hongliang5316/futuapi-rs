@@ -17,6 +17,14 @@ pub async fn main() -> Result<()> {
         .await?;
 
     println!("{:?}", get_security_snapshot_resp);
+    for snapshot in get_security_snapshot_resp.snapshot_list {
+        if let Some(equity) = snapshot.equity_ex_data {
+            println!(
+                "last price: {}, issued shares: {}, outstanding shares: {}",
+                snapshot.basic.cur_price, equity.issued_shares, equity.outstanding_shares
+            );
+        }
+    }
 
     Ok(())
 }

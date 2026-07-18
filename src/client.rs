@@ -25,6 +25,7 @@ use crate::{
             get::{GetPriceReminderRequest, GetPriceReminderResponse},
             set::{SetPriceReminderRequest, SetPriceReminderResponse},
         },
+        request_history_kl::{self, RequestHistoryKLRequest, RequestHistoryKLResponse},
         rt::{self, update::UpdateRTResponse},
         security_snapshot::{self, GetSecuritySnapshotRequest, GetSecuritySnapshotResponse},
         stock_filter::{self, GetStockFilterRequest, GetStockFilterResponse},
@@ -439,6 +440,23 @@ impl QotClient {
                 }
             };
         security_snapshot::check_response(frame.body)
+    }
+
+    pub async fn request_history_kl(
+        &mut self,
+        request_history_kl_req: RequestHistoryKLRequest,
+    ) -> crate::Result<RequestHistoryKLResponse> {
+        let frame = request_history_kl_req.into_frame();
+        self.connection.write_frame(&frame).await?;
+        let frame: Frame<crate::Qot_RequestHistoryKL::Response> =
+            match self.connection.read_frame().await? {
+                Some(frame) => frame,
+                None => {
+                    let err = Error::new(ErrorKind::ConnectionReset, "connection reset by server");
+                    return Err(err.into());
+                }
+            };
+        request_history_kl::check_response(frame.body)
     }
 
     pub async fn get_user_security_group(
