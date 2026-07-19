@@ -7,13 +7,13 @@ pub async fn main() -> Result<()> {
         .get_user_security(GetUserSecurityRequest::new("A".into()))
         .await?;
 
-    let code_list: Vec<_> = get_user_security_resp
-        .into_inner()
-        .iter()
-        .map(|x| x.basic.security.to_string())
-        .collect();
-
-    println!("{:?}", code_list);
+    for security in get_user_security_resp.into_inner() {
+        println!(
+            "{} ({})",
+            security.basic.name,
+            security.basic.security.to_string()
+        );
+    }
 
     Ok(())
 }
