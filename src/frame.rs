@@ -147,6 +147,12 @@ impl<T: MessageFull> Frame<T> {
         }
     }
 
+    pub fn to_bytes(&self) -> Result<Vec<u8>, protobuf::Error> {
+        let mut buf = self.header.to_vec();
+        buf.extend(self.body.write_to_bytes()?);
+        Ok(buf)
+    }
+
     pub fn parse(src: &mut Cursor<&[u8]>) -> Result<Frame<T>, Error> {
         let header = get_header(src)?;
         if header.proto_fmt_type != 0 {

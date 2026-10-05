@@ -41,19 +41,27 @@ use crate::{
             get::{GetUserSecurityGroupRequest, GetUserSecurityGroupResponse},
         },
     },
+    connection::FrameReader,
+    frame::{self, FrameRaw},
     serial_no, Connection, Frame,
     Trd_Common::{
         ModifyOrderOp, OrderType, SecurityFirm, TimeInForce, TrailType, TrdEnv, TrdMarket,
         TrdSecMarket, TrdSide,
     },
 };
+use protobuf::MessageFull;
 use std::{
+    collections::HashMap,
     io::{Error, ErrorKind},
-    sync::Arc,
+    sync::{Arc, Mutex as StdMutex},
 };
 use tokio::{
-    net::{TcpStream, ToSocketAddrs},
-    sync::Mutex,
+    io::AsyncWriteExt,
+    net::{
+        tcp::{OwnedReadHalf, OwnedWriteHalf},
+        TcpStream, ToSocketAddrs,
+    },
+    sync::{mpsc, oneshot},
     task::JoinHandle,
     time::{sleep, Duration},
 };
@@ -67,10 +75,12 @@ pub struct TrdClient {
     connection: Connection,
 }
 
+/// Request side of a subscription connection. Cheap to clone, so subscriptions
+/// can be changed from any task while a `Subscriber` is reading pushes.
+#[derive(Clone)]
 pub struct SubClient {
-    keep_alive_interval: i32,
-    connection: Arc<Mutex<Connection>>,
-    handle: Option<JoinHandle<()>>,
+    requester: Requester,
+    _tasks: Arc<TaskGuard>,
 }
 
 pub async fn qot_connect<T: ToSocketAddrs>(addr: T) -> crate::Result<QotClient> {
@@ -83,31 +93,50 @@ pub async fn qot_connect<T: ToSocketAddrs>(addr: T) -> crate::Result<QotClient> 
     Ok(client)
 }
 
-pub async fn sub_connect<T: ToSocketAddrs>(addr: T) -> crate::Result<SubClient> {
+/// Connects a subscription connection. The socket is split: a reader task routes
+/// responses back to their request and everything else to the `Subscriber`, a
+/// writer task owns the write half, and a keepalive task runs independently of both.
+pub async fn sub_connect<T: ToSocketAddrs>(addr: T) -> crate::Result<(SubClient, Subscriber)> {
     let socket = TcpStream::connect(addr).await?;
-    let connection = Connection::new(socket);
+    let (read_half, write_half) = socket.into_split();
 
-    let mut client = SubClient {
-        keep_alive_interval: 0,
-        connection: Arc::new(Mutex::new(connection)),
-        handle: None,
+    let pending = Arc::new(StdMutex::new(Some(HashMap::new())));
+    let (write_tx, write_rx) = mpsc::unbounded_channel();
+    // Unbounded so a slow consumer never blocks the reader, which would also
+    // hold up the response to a `subscribe` awaited on the consumer's task.
+    let (push_tx, push_rx) = mpsc::unbounded_channel();
+
+    let mut tasks = TaskGuard(vec![
+        tokio::spawn(read_loop(
+            FrameReader::new(read_half),
+            pending.clone(),
+            push_tx,
+        )),
+        tokio::spawn(write_loop(write_half, write_rx)),
+    ]);
+
+    let requester = Requester { write_tx, pending };
+    let frame: Frame<crate::InitConnect::Response> = requester
+        .request(InitConnectRequest::default().into_frame())
+        .await?;
+    let init_connect_resp = init_connect::check_response(frame.body)?;
+
+    tasks.0.push(tokio::spawn(keepalive_loop(
+        requester.write_tx.clone(),
+        init_connect_resp.keep_alive_interval,
+    )));
+
+    let tasks = Arc::new(tasks);
+    let client = SubClient {
+        requester,
+        _tasks: tasks.clone(),
     };
-    let init_connect_resp = client.init_connect().await?;
-    client.keep_alive_interval = init_connect_resp.keep_alive_interval;
+    let subscriber = Subscriber {
+        push_rx,
+        _tasks: tasks,
+    };
 
-    let conn = client.connection.clone();
-    let handle: tokio::task::JoinHandle<_> = tokio::spawn(async move {
-        loop {
-            sleep(Duration::from_secs(client.keep_alive_interval as u64)).await;
-            let keepalive_ret = SubClient::keepalive(&conn).await;
-            if let Err(e) = keepalive_ret {
-                println!("keepalive error: {:?}", e);
-            }
-        }
-    });
-    client.handle = Some(handle);
-
-    Ok(client)
+    Ok((client, subscriber))
 }
 
 pub async fn trd_connect<T: ToSocketAddrs>(addr: T) -> crate::Result<TrdClient> {
@@ -314,52 +343,13 @@ impl TrdClient {
 }
 
 impl SubClient {
-    async fn init_connect(&mut self) -> crate::Result<InitConnectResponse> {
-        let frame = InitConnectRequest::default().into_frame();
-        let mut connection = self.connection.lock().await;
-        connection.write_frame(&frame).await?;
-        let frame: Frame<crate::InitConnect::Response> = match connection.read_frame().await? {
-            Some(frame) => frame,
-            None => {
-                let err = Error::new(ErrorKind::ConnectionReset, "connection reset by server");
-                return Err(err.into());
-            }
-        };
-        init_connect::check_response(frame.body)
+    pub async fn subscribe(&self, subscribe_req: SubscribeRequest) -> crate::Result<()> {
+        let frame: Frame<crate::Qot_Sub::Response> =
+            self.requester.request(subscribe_req.into_frame()).await?;
+        subscribe::check_response(frame.body)
     }
 
-    pub async fn keepalive(conn: &Arc<Mutex<Connection>>) -> crate::Result<()> {
-        let frame = KeepAliveRequest::new(chrono::Local::now().timestamp()).into_frame();
-        let mut connection = conn.lock().await;
-        connection.write_frame(&frame).await?;
-        Ok(())
-        // let frame: Frame<crate::KeepAlive::Response> = match connection.read_frame().await? {
-        //     Some(frame) => frame,
-        //     None => {
-        //         let err = Error::new(ErrorKind::ConnectionReset, "connection reset by server");
-        //         return Err(err.into());
-        //     }
-        // };
-        // keepalive::check_response(frame.body)
-    }
-
-    pub async fn subscribe(self, subscribe_req: SubscribeRequest) -> crate::Result<Subscriber> {
-        let frame = subscribe_req.into_frame();
-        let mut connection = self.connection.lock().await;
-        connection.write_frame(&frame).await?;
-        let frame: Frame<crate::Qot_Sub::Response> = match connection.read_frame().await? {
-            Some(frame) => frame,
-            None => {
-                let err = Error::new(ErrorKind::ConnectionReset, "connection reset by server");
-                return Err(err.into());
-            }
-        };
-        subscribe::check_response(frame.body)?;
-        drop(connection);
-        Ok(Subscriber { client: self })
-    }
-
-    pub async fn unsubscribe_all(&mut self) -> crate::Result<()> {
+    pub async fn unsubscribe_all(&self) -> crate::Result<()> {
         let subscribe_req = SubscribeRequest::new(
             vec![],
             vec![],
@@ -372,24 +362,127 @@ impl SubClient {
             None,
         );
 
-        let frame = subscribe_req.into_frame();
-        let mut connection = self.connection.lock().await;
-        connection.write_frame(&frame).await?;
-        let frame: Frame<crate::Qot_Sub::Response> = match connection.read_frame().await? {
-            Some(frame) => frame,
-            None => {
-                let err = Error::new(ErrorKind::ConnectionReset, "connection reset by server");
-                return Err(err.into());
-            }
-        };
-        subscribe::check_response(frame.body)
+        self.subscribe(subscribe_req).await
     }
 }
 
-impl Drop for SubClient {
+/// In-flight requests keyed by `(proto_id, serial_no)`, which OpenD echoes back
+/// in the response header. `None` once the reader has stopped.
+type Pending = StdMutex<Option<HashMap<(u32, u32), oneshot::Sender<FrameRaw>>>>;
+
+#[derive(Clone)]
+struct Requester {
+    write_tx: mpsc::UnboundedSender<Vec<u8>>,
+    pending: Arc<Pending>,
+}
+
+impl Requester {
+    async fn request<Req: MessageFull, Resp: MessageFull>(
+        &self,
+        frame: Frame<Req>,
+    ) -> crate::Result<Frame<Resp>> {
+        let key = (frame.header.proto_id, frame.header.serial_no);
+        let (tx, rx) = oneshot::channel();
+        match self.pending.lock().unwrap().as_mut() {
+            Some(pending) => pending.insert(key, tx),
+            None => return Err(connection_reset()),
+        };
+        let _guard = PendingGuard {
+            pending: &self.pending,
+            key,
+        };
+
+        self.write_tx
+            .send(frame.to_bytes()?)
+            .map_err(|_| connection_reset())?;
+        let frame_raw = rx.await.map_err(|_| connection_reset())?;
+        Ok(Frame::from_raw(frame_raw)?)
+    }
+}
+
+/// Removes the pending entry when a request fails or is cancelled before its
+/// response arrives.
+struct PendingGuard<'a> {
+    pending: &'a Pending,
+    key: (u32, u32),
+}
+
+impl Drop for PendingGuard<'_> {
     fn drop(&mut self) {
-        if let Some(handle) = self.handle.take() {
+        if let Some(pending) = self.pending.lock().unwrap().as_mut() {
+            pending.remove(&self.key);
+        }
+    }
+}
+
+/// Aborts the background tasks once both `SubClient` and `Subscriber` are gone.
+struct TaskGuard(Vec<JoinHandle<()>>);
+
+impl Drop for TaskGuard {
+    fn drop(&mut self) {
+        for handle in &self.0 {
             handle.abort();
+        }
+    }
+}
+
+fn connection_reset() -> crate::Error {
+    Error::new(ErrorKind::ConnectionReset, "connection reset by server").into()
+}
+
+async fn read_loop(
+    mut reader: FrameReader<OwnedReadHalf>,
+    pending: Arc<Pending>,
+    push_tx: mpsc::UnboundedSender<Result<FrameRaw, frame::Error>>,
+) {
+    loop {
+        match reader.read_frame_raw().await {
+            Ok(Some(frame_raw)) => {
+                let key = (frame_raw.header.proto_id, frame_raw.header.serial_no);
+                let waiter = pending
+                    .lock()
+                    .unwrap()
+                    .as_mut()
+                    .and_then(|pending| pending.remove(&key));
+                // anything that doesn't answer an in-flight request is a push
+                match waiter {
+                    Some(waiter) => {
+                        let _ = waiter.send(frame_raw);
+                    }
+                    None => {
+                        let _ = push_tx.send(Ok(frame_raw));
+                    }
+                }
+            }
+            Ok(None) => break,
+            Err(e) => {
+                let _ = push_tx.send(Err(e));
+                break;
+            }
+        }
+    }
+
+    // fail in-flight and later requests instead of leaving them waiting forever
+    *pending.lock().unwrap() = None;
+}
+
+async fn write_loop(mut writer: OwnedWriteHalf, mut write_rx: mpsc::UnboundedReceiver<Vec<u8>>) {
+    while let Some(buf) = write_rx.recv().await {
+        if writer.write_all(&buf).await.is_err() {
+            break;
+        }
+    }
+}
+
+async fn keepalive_loop(write_tx: mpsc::UnboundedSender<Vec<u8>>, keep_alive_interval: i32) {
+    let interval = Duration::from_secs(keep_alive_interval.max(1) as u64);
+    loop {
+        sleep(interval).await;
+        // the reply has no pending entry, so it reaches `next_data` and is skipped there
+        let frame = KeepAliveRequest::new(chrono::Local::now().timestamp()).into_frame();
+        let Ok(buf) = frame.to_bytes() else { break };
+        if write_tx.send(buf).is_err() {
+            break;
         }
     }
 }
@@ -611,7 +704,8 @@ impl QotClient {
 }
 
 pub struct Subscriber {
-    client: SubClient,
+    push_rx: mpsc::UnboundedReceiver<Result<FrameRaw, frame::Error>>,
+    _tasks: Arc<TaskGuard>,
 }
 
 #[derive(Debug)]
@@ -622,32 +716,34 @@ pub enum UpdateResponse {
 }
 
 impl Subscriber {
+    /// Waits for the next push. `Err` means this push (or the connection) failed;
+    /// `Ok(None)` means the connection is closed and no more pushes will come.
     pub async fn next_data(&mut self) -> crate::Result<Option<UpdateResponse>> {
-        let mut connection = self.client.connection.lock().await;
-        match connection.read_frame_raw().await? {
-            Some(frame_raw) => match frame_raw.header.proto_id {
+        loop {
+            let frame_raw = match self.push_rx.recv().await {
+                Some(frame_raw) => frame_raw?,
+                None => return Ok(None),
+            };
+
+            let resp = match frame_raw.header.proto_id {
                 basic_qot::update::PROTO_ID => {
                     let frame: Frame<crate::Qot_UpdateBasicQot::Response> =
                         Frame::from_raw(frame_raw)?;
-                    let resp = basic_qot::update::check_response(frame.body)?;
-                    Ok(Some(UpdateResponse::BasicQot(resp)))
+                    UpdateResponse::BasicQot(basic_qot::update::check_response(frame.body)?)
                 }
                 rt::update::PROTO_ID => {
                     let frame: Frame<crate::Qot_UpdateRT::Response> = Frame::from_raw(frame_raw)?;
-                    let resp = rt::update::check_response(frame.body)?;
-                    Ok(Some(UpdateResponse::RT(resp)))
+                    UpdateResponse::RT(rt::update::check_response(frame.body)?)
                 }
                 kl::update::PROTO_ID => {
                     let frame: Frame<crate::Qot_UpdateKL::Response> = Frame::from_raw(frame_raw)?;
-                    let resp = kl::update::check_response(frame.body)?;
-                    Ok(Some(UpdateResponse::KL(resp)))
+                    UpdateResponse::KL(kl::update::check_response(frame.body)?)
                 }
-                _ => {
-                    // ignore other response
-                    return Ok(None);
-                }
-            },
-            None => Ok(None),
+                // keepalive replies and pushes not handled yet
+                _ => continue,
+            };
+
+            return Ok(Some(resp));
         }
     }
 }
